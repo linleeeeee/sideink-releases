@@ -56,7 +56,7 @@
   .menubar i:nth-child(1){background:#ff5f57}.menubar i:nth-child(2){background:#febc2e}.menubar i:nth-child(3){background:#28c840}
   .cursor{position:absolute;left:40%;top:54%;z-index:8;width:24px;height:24px;
     transition:left 1.05s cubic-bezier(.45,0,.2,1),top 1.05s cubic-bezier(.45,0,.2,1),opacity .35s;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
-  .panel{position:absolute;top:30px;right:0;bottom:20px;width:34%;z-index:5;
+  .panel{position:absolute;top:30px;right:0;bottom:20px;width:40%;z-index:5;
     background:repeating-linear-gradient(to bottom,rgba(150,110,55,.06) 0,rgba(150,110,55,.06) 1px,transparent 1px,transparent 24px),#fef3c7;
     background-position:0 18px;border-radius:5px 0 0 5px;box-shadow:-14px 0 34px rgba(15,23,42,.28);
     padding:24px 12px 14px;overflow:visible;transform:translateX(103%);transition:transform .62s cubic-bezier(.2,.78,.2,1)}
@@ -277,13 +277,13 @@ function toggleLang(){
   const sleep = ms => new Promise(r=>setTimeout(r,ms));
   const enMode = () => document.documentElement.lang === 'en';
   const T = {
-    a:['研究心理-行为相关理论','Study behavior psychology'],
-    b:['做个网站，放我的产品','Build a site for my product'],
-    c:['买域名和服务器','Buy domain & hosting'],
-    d:['设计页面布局','Design the layout'],
-    e:['收集最新 AI 行业资讯','Collect latest AI news'],
-    f:['旅游物品准备','Pack for the trip'],
-    g:['给白白换猫砂盆','Change the cat litter']
+    a:['研究心理-行为理论','Read on habits'],
+    b:['做个网站放产品','Ship the website'],
+    c:['买域名和服务器','Buy a domain'],
+    d:['设计页面布局','Design layout'],
+    e:['收集 AI 行业资讯','Collect AI news'],
+    f:['旅游物品准备','Pack for trip'],
+    g:['给白白换猫砂盆','Feed the cat']
   };
   const tx = k => enMode() ? T[k][1] : T[k][0];
   function makeRow(level){
