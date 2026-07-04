@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SideInk — 常驻屏幕边缘的悬浮便签待办</title>
-<meta name="description" content="SideInk 是一款 macOS 悬浮便签待办。鼠标贴边一划就写，随手清空杂念；完成有烟花，让努力被看见。数据只存本地，不登录、不上传、不追踪。">
+<title>SideInk</title>
+<meta name="description" content="SideInk is a floating sticky-note to-do for macOS. Swipe the screen edge to jot, clear your mind, stay focused. Local-only, no login, no tracking.">
 <link rel="icon" href="icon.png">
 <style>
   :root{
     --bg:#ffffff; --soft:#f7f8fa; --soft2:#eef1f5;
     --ink:#0f172a; --ink2:#475569; --ink3:#94a3b8;
-    --line:#e7e9ee; --blue:#0a84ff; --blue-ink:#0064cf; --blue-soft:#eaf4ff;
+    --line:#e7e9ee; --blue:#009BFF; --blue-ink:#0077cc; --blue-soft:#e6f5ff;
     --radius:14px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -23,31 +23,30 @@
   a{color:inherit;text-decoration:none}
   .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
 
-  /* Nav */
   nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line)}
   .nav-in{display:flex;align-items:center;justify-content:space-between;height:64px}
   .brand{display:flex;align-items:center;gap:11px;font-weight:700;font-size:19px;letter-spacing:-.2px}
-  .brand img{width:34px;height:34px;filter:drop-shadow(0 2px 5px rgba(15,23,42,.18))}
-  .nav-right{display:flex;align-items:center;gap:24px}
+  .brand img{width:34px;height:34px;filter:drop-shadow(0 2px 6px rgba(15,23,42,.16))}
+  .nav-right{display:flex;align-items:center;gap:22px}
   .nav-right a.link{font-size:15px;color:var(--ink2);font-weight:500}
   .nav-right a.link:hover{color:var(--ink)}
+  .lang{font-size:13px;font-weight:600;color:var(--ink2);border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 12px;cursor:pointer;transition:all .15s}
+  .lang:hover{border-color:var(--blue);color:var(--blue)}
   .btn{display:inline-flex;align-items:center;gap:9px;font-weight:600;border-radius:11px;transition:transform .12s,background .15s,box-shadow .15s;cursor:pointer}
-  .btn-primary{background:var(--ink);color:#fff;padding:11px 20px;font-size:15px;box-shadow:0 6px 18px rgba(15,23,42,.18)}
-  .btn-primary:hover{background:#1e293b;transform:translateY(-1px)}
-  .btn-primary img{width:20px;height:20px;border-radius:5px}
-  .nav-right .btn-primary{padding:9px 18px}
+  .btn-primary{background:var(--blue);color:#fff;padding:11px 20px;font-size:15px;box-shadow:0 8px 20px -6px rgba(0,155,255,.5)}
+  .btn-primary:hover{background:var(--blue-ink);transform:translateY(-1px)}
+  .btn-primary img{width:20px;height:20px;border-radius:5px;background:#fff}
+  .nav-right .btn-primary{padding:9px 16px}
 
-  /* Hero */
   .hero{display:grid;grid-template-columns:1fr 1.05fr;gap:56px;align-items:center;padding:76px 0 84px}
   .hero h1{font-size:52px;line-height:1.1;letter-spacing:-1.2px;font-weight:800}
-  .hero .sub{margin-top:22px;font-size:19px;line-height:1.6;color:var(--ink2);max-width:26em}
+  .hero .sub{margin-top:22px;font-size:19px;line-height:1.6;color:var(--ink2);max-width:27em}
   .hero-cta{margin-top:34px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   .hero-cta .btn-primary{padding:14px 26px;font-size:16px}
-  .trust{margin-top:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink3)}
+  .trust{margin-top:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink3)}
   .trust b{color:var(--ink2);font-weight:600}
   .trust .dot{width:3px;height:3px;border-radius:50%;background:var(--ink3)}
 
-  /* 演示窗（干净桌面帧）*/
   .stage{position:relative;width:100%;max-width:600px;aspect-ratio:16/11;margin-left:auto;
     overflow:hidden;border-radius:18px;box-shadow:0 30px 70px -20px rgba(15,23,42,.35),0 0 0 1px rgba(15,23,42,.06)}
   .screen{position:absolute;inset:0;overflow:hidden;background:linear-gradient(150deg,#334155,#475569 45%,#94a3b8)}
@@ -77,14 +76,12 @@
   @keyframes blink{50%{opacity:0}}
   .spark{position:absolute;border-radius:50%;pointer-events:none;z-index:20}
 
-  /* Section */
   .section{padding:76px 0}
   .section.soft{background:var(--soft);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
   .sec-head{text-align:center;max-width:34em;margin:0 auto 52px}
   .sec-head h2{font-size:34px;letter-spacing:-.6px;font-weight:800}
   .sec-head p{margin-top:12px;font-size:17px;color:var(--ink2)}
 
-  /* Features */
   .features{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
   .feature{background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:30px 30px 32px;
     opacity:0;transform:translateY(18px);transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.2,1)}
@@ -94,8 +91,7 @@
   .feature h3{font-size:19px;font-weight:700;letter-spacing:-.2px}
   .feature p{margin-top:9px;font-size:15px;color:var(--ink2);line-height:1.6}
 
-  /* 隐私信任带 */
-  .privacy{display:flex;align-items:center;gap:26px;max-width:760px;margin:0 auto;flex-wrap:wrap;justify-content:center;text-align:center}
+  .privacy{display:flex;align-items:center;gap:26px;max-width:760px;margin:0 auto;flex-wrap:wrap;justify-content:center}
   .privacy .shield{flex:0 0 auto;width:64px;height:64px;border-radius:18px;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--blue)}
   .privacy .shield svg{width:32px;height:32px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .privacy .ptxt{text-align:left;min-width:260px;flex:1}
@@ -104,7 +100,6 @@
   .badges{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
   .badge{font-size:13px;font-weight:600;color:var(--ink2);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:6px 13px}
 
-  /* 结尾 CTA */
   .final{text-align:center;padding:96px 0}
   .final h2{font-size:40px;letter-spacing:-.8px;font-weight:800}
   .final p{margin-top:14px;font-size:18px;color:var(--ink2)}
@@ -132,28 +127,29 @@
   <div class="wrap nav-in">
     <div class="brand"><img src="icon.png" alt="SideInk"> SideInk</div>
     <div class="nav-right">
-      <a class="link" href="#features">特性</a>
-      <a class="link" href="#privacy">隐私</a>
-      <a class="btn btn-primary" href="#download"><img src="icon.png" alt="">下载</a>
+      <a class="link" href="#features" data-zh="特性" data-en="Features">特性</a>
+      <a class="link" href="#privacy" data-zh="隐私" data-en="Privacy">隐私</a>
+      <button class="lang" id="langBtn" onclick="toggleLang()">EN</button>
+      <a class="btn btn-primary" href="#download"><img src="icon.png" alt=""><span data-zh="下载" data-en="Download">下载</span></a>
     </div>
   </div>
 </nav>
 
-<!-- HERO -->
 <div class="wrap">
   <section class="hero" id="download">
     <div>
-      <h1>想法太快，<br>别让它溜走</h1>
-      <p class="sub">SideInk 是常驻屏幕边缘的悬浮便签。鼠标贴边一划就写，随手清空杂念、专注当下。</p>
+      <h1 data-zh="想法太快，<br>别让它溜走" data-en="Ideas move fast.<br>Don't let them slip.">想法太快，<br>别让它溜走</h1>
+      <p class="sub" data-zh="SideInk 是常驻屏幕边缘的悬浮便签。鼠标贴边一划就写，随手清空杂念、专注当下。"
+         data-en="SideInk is a floating sticky note that lives at your screen's edge. Swipe the edge to jot, clear your mind, and stay focused.">SideInk 是常驻屏幕边缘的悬浮便签。鼠标贴边一划就写，随手清空杂念、专注当下。</p>
       <div class="hero-cta">
         <a class="btn btn-primary" href="https://github.com/linleeeeee/sideink-releases/releases/latest" target="_blank" rel="noopener">
-          <img src="icon.png" alt=""> 下载 for macOS
+          <img src="icon.png" alt=""><span data-zh="下载 for macOS" data-en="Download for macOS">下载 for macOS</span>
         </a>
       </div>
       <div class="trust">
-        <span><b>免费</b></span><span class="dot"></span>
-        <span>支持所有 Mac</span><span class="dot"></span>
-        <span>数据仅存本地</span>
+        <span><b data-zh="免费" data-en="Free">免费</b></span><span class="dot"></span>
+        <span data-zh="支持所有 Mac" data-en="All Macs">支持所有 Mac</span><span class="dot"></span>
+        <span data-zh="数据仅存本地" data-en="Local-only data">数据仅存本地</span>
       </div>
     </div>
 
@@ -170,65 +166,67 @@
   </section>
 </div>
 
-<!-- FEATURES -->
 <div class="section soft" id="features">
   <div class="wrap">
     <div class="sec-head">
-      <h2>为随手记而生</h2>
-      <p>不折腾、不打断——想到就写，写完就走。</p>
+      <h2 data-zh="为随手记而生" data-en="Built for quick capture">为随手记而生</h2>
+      <p data-zh="不折腾、不打断——想到就写，写完就走。" data-en="No friction, no interruption — jot it and go.">不折腾、不打断——想到就写，写完就走。</p>
     </div>
     <div class="features">
       <div class="feature">
         <div class="fi"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><line x1="15" y1="4" x2="15" y2="20"/><polyline points="9 10 11 12 9 14"/></svg></div>
-        <h3>贴边即用</h3>
-        <p>鼠标碰到屏幕右缘，便签滑出；移开自动收起。拉出就能打字，不占地方、不碍眼。</p>
+        <h3 data-zh="贴边即用" data-en="Swipe to summon">贴边即用</h3>
+        <p data-zh="鼠标碰到屏幕右缘，便签滑出；移开自动收起。拉出就能打字，不占地方、不碍眼。"
+           data-en="Touch the right edge and the note slides out; move away and it hides. Type instantly — no clutter.">鼠标碰到屏幕右缘，便签滑出；移开自动收起。拉出就能打字，不占地方、不碍眼。</p>
       </div>
       <div class="feature">
         <div class="fi"><svg viewBox="0 0 24 24"><polyline points="3 6 4.5 7.5 7 5"/><line x1="10" y1="6" x2="21" y2="6"/><polyline points="10 12.5 11.5 14 14 11.5"/><line x1="16" y1="12.5" x2="21" y2="12.5"/><line x1="10" y1="19" x2="21" y2="19"/></svg></div>
-        <h3>两级大纲，自由书写</h3>
-        <p>像写大纲一样列待办，Tab 一键缩进为子项。想清楚了，复制成 Markdown 挪进别处。</p>
+        <h3 data-zh="两级大纲，自由书写" data-en="Two-level outline">两级大纲，自由书写</h3>
+        <p data-zh="像写大纲一样列待办，Tab 一键缩进为子项。想清楚了，复制成 Markdown 挪进别处。"
+           data-en="List todos like an outline; Tab to indent a subtask. Copy as Markdown to move it anywhere.">像写大纲一样列待办，Tab 一键缩进为子项。想清楚了，复制成 Markdown 挪进别处。</p>
       </div>
       <div class="feature">
         <div class="fi"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2 2M16.4 16.4l2 2M18.4 5.6l-2 2M7.6 16.4l-2 2"/><circle cx="12" cy="12" r="3"/></svg></div>
-        <h3>完成有烟花</h3>
-        <p>勾掉一条就放一束烟花——让每一份小小的努力都被看见。做事这件事，是可以被哄成功的。</p>
+        <h3 data-zh="完成有烟花" data-en="Fireworks on done">完成有烟花</h3>
+        <p data-zh="勾掉一条就放一束烟花——让每一份小小的努力都被看见。做事这件事，是可以被哄成功的。"
+           data-en="Check one off and fireworks burst — every bit of effort gets seen. Doing things can be a celebration.">勾掉一条就放一束烟花——让每一份小小的努力都被看见。做事这件事，是可以被哄成功的。</p>
       </div>
       <div class="feature">
         <div class="fi"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="10" height="12" rx="2"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><circle cx="9" cy="14" r="1"/><path d="M17 5l4 2v3.5c0 3.5-2.5 6-4 7"/></svg></div>
-        <h3>AI 帮你代劳</h3>
-        <p>「收集资讯」类待办交给 AI：自动汇总多源信息、整理成简报，直接写进你的 Obsidian。</p>
+        <h3 data-zh="AI 帮你代劳" data-en="Let AI do it">AI 帮你代劳</h3>
+        <p data-zh="「收集资讯」类待办交给 AI：自动汇总多源信息、整理成简报，直接写进你的 Obsidian。"
+           data-en="Hand 'collect news' todos to AI: it gathers sources into a brief, straight into your Obsidian.">「收集资讯」类待办交给 AI：自动汇总多源信息、整理成简报，直接写进你的 Obsidian。</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- 隐私信任 -->
 <div class="section" id="privacy">
   <div class="wrap">
     <div class="privacy">
       <div class="shield"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v5c0 5-3.5 9-8 11-4.5-2-8-6-8-11V6z"/><polyline points="9 12 11 14 15 10"/></svg></div>
       <div class="ptxt">
-        <h3>你的想法，只属于你</h3>
-        <p>所有待办与便签都只存在你自己的电脑上。无需注册登录，不上传服务器，不做任何追踪。</p>
+        <h3 data-zh="你的想法，只属于你" data-en="Your thoughts stay yours">你的想法，只属于你</h3>
+        <p data-zh="所有待办与便签都只存在你自己的电脑上。无需注册登录，不上传服务器，不做任何追踪。"
+           data-en="Everything lives only on your Mac. No sign-up, no upload to any server, no tracking whatsoever.">所有待办与便签都只存在你自己的电脑上。无需注册登录，不上传服务器，不做任何追踪。</p>
         <div class="badges">
-          <span class="badge">本地存储</span>
-          <span class="badge">无需登录</span>
-          <span class="badge">不追踪</span>
-          <span class="badge">AI 用你自己的 Key</span>
+          <span class="badge" data-zh="本地存储" data-en="Local storage">本地存储</span>
+          <span class="badge" data-zh="无需登录" data-en="No login">无需登录</span>
+          <span class="badge" data-zh="不追踪" data-en="No tracking">不追踪</span>
+          <span class="badge" data-zh="AI 用你自己的 Key" data-en="Bring your own AI key">AI 用你自己的 Key</span>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- 结尾 CTA -->
 <div class="wrap">
   <section class="final">
-    <h2>把杂念腾空，让努力看见。</h2>
-    <p>免费下载，支持所有 Mac，即装即用。</p>
+    <h2 data-zh="把杂念腾空，让努力看见。" data-en="Clear your mind. See your effort.">把杂念腾空，让努力看见。</h2>
+    <p data-zh="免费下载，支持所有 Mac，即装即用。" data-en="Free download. Every Mac. Ready in one click.">免费下载，支持所有 Mac，即装即用。</p>
     <div class="hero-cta">
       <a class="btn btn-primary" href="https://github.com/linleeeeee/sideink-releases/releases/latest" target="_blank" rel="noopener">
-        <img src="icon.png" alt=""> 下载 for macOS
+        <img src="icon.png" alt=""><span data-zh="下载 for macOS" data-en="Download for macOS">下载 for macOS</span>
       </a>
     </div>
   </section>
@@ -238,14 +236,38 @@
   <div class="wrap foot-in">
     <div>© 2026 SideInk · v3.0</div>
     <div class="foot-links">
-      <a href="#features">特性</a>
-      <a href="#privacy">隐私</a>
-      <a href="#download">下载</a>
+      <a href="#features" data-zh="特性" data-en="Features">特性</a>
+      <a href="#privacy" data-zh="隐私" data-en="Privacy">隐私</a>
+      <a href="#download" data-zh="下载" data-en="Download">下载</a>
     </div>
   </div>
 </footer>
 
 <script>
+/* 中英双语：默认跟随系统语言 */
+function applyLang(lang){
+  const en = lang === 'en';
+  document.documentElement.lang = en ? 'en' : 'zh-CN';
+  document.querySelectorAll('[data-zh]').forEach(el=>{
+    el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-zh');
+  });
+  document.title = en ? 'SideInk — floating sticky-note to-do for macOS' : 'SideInk — 常驻屏幕边缘的悬浮便签待办';
+  const btn = document.getElementById('langBtn');
+  if(btn) btn.textContent = en ? '中' : 'EN';
+  try{ localStorage.setItem('lang', lang); }catch(e){}
+}
+function toggleLang(){
+  const cur = (document.documentElement.lang === 'en') ? 'en' : 'zh';
+  applyLang(cur === 'en' ? 'zh' : 'en');
+}
+(function(){
+  let lang;
+  try{ lang = localStorage.getItem('lang'); }catch(e){}
+  if(!lang){ lang = (navigator.language||'').toLowerCase().startsWith('zh') ? 'zh' : 'en'; }
+  applyLang(lang);
+})();
+
+/* 演示动画 */
 (function(){
   const rows = document.getElementById('demoRows');
   const panel = document.getElementById('demoPanel');
@@ -253,6 +275,17 @@
   if(!rows) return;
   const COLORS = ['#009BFF','#7c3aed','#16a34a','#eab308','#f97316','#ef4444','#ec4899','#06b6d4','#00c2a8','#ff5da2'];
   const sleep = ms => new Promise(r=>setTimeout(r,ms));
+  const enMode = () => document.documentElement.lang === 'en';
+  const T = {
+    a:['研究心理-行为相关理论','Study behavior psychology'],
+    b:['做个网站，放我的产品','Build a site for my product'],
+    c:['买域名和服务器','Buy domain & hosting'],
+    d:['设计页面布局','Design the layout'],
+    e:['收集最新 AI 行业资讯','Collect latest AI news'],
+    f:['旅游物品准备','Pack for the trip'],
+    g:['给白白换猫砂盆','Change the cat litter']
+  };
+  const tx = k => enMode() ? T[k][1] : T[k][0];
   function makeRow(level){
     const row = document.createElement('div');
     row.className = 'demo-row' + (level ? ' sub' : '');
@@ -268,11 +301,7 @@
     for(const ch of text){ caret.insertAdjacentText('beforebegin', ch); await sleep(48 + Math.random()*42); }
     caret.remove();
   }
-  function localPos(el){
-    let x = 0, y = 0, n = el;
-    while(n && n !== panel){ x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
-    return { x: x + el.offsetWidth/2, y: y + el.offsetHeight/2 };
-  }
+  function localPos(el){ let x=0,y=0,n=el; while(n&&n!==panel){x+=n.offsetLeft;y+=n.offsetTop;n=n.offsetParent;} return {x:x+el.offsetWidth/2,y:y+el.offsetHeight/2}; }
   function burst(cb){
     const c = localPos(cb), N = 30;
     for(let i=0;i<N;i++){
@@ -282,39 +311,34 @@
       s.style.left = c.x + 'px'; s.style.top = c.y + 'px';
       panel.appendChild(s);
       const ang = (i/N)*Math.PI*2 + Math.random()*0.3, dist = 40 + Math.random()*70;
-      requestAnimationFrame(()=>{
-        s.style.transition = 'transform .85s cubic-bezier(.15,.6,.3,1), opacity .85s ease-out';
-        s.style.transform = `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist + 18}px)`;
-        s.style.opacity = '0';
-      });
+      requestAnimationFrame(()=>{ s.style.transition='transform .85s cubic-bezier(.15,.6,.3,1), opacity .85s ease-out'; s.style.transform=`translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist+18}px)`; s.style.opacity='0'; });
       setTimeout(()=>s.remove(), 900);
     }
   }
   function check(cell){ cell.cb.classList.add('done'); cell.cb.textContent='✓'; cell.t.classList.add('done'); burst(cell.cb); }
   function reset(){ panel.classList.remove('out'); cursor.style.opacity='1'; cursor.style.left='40%'; cursor.style.top='54%'; rows.innerHTML=''; }
-
   async function run(){
     while(true){
       reset(); await sleep(1000);
       cursor.style.left='97%'; cursor.style.top='48%'; await sleep(1150);
       panel.classList.add('out'); await sleep(300); cursor.style.opacity='0'; await sleep(560);
-      const a = makeRow(0); await sleep(160); await type(a.t,'研究心理-行为相关理论'); await sleep(460); check(a); await sleep(880);
-      const b = makeRow(0); await sleep(150); await type(b.t,'做个网站，放我的产品'); await sleep(380);
-      const c = makeRow(1); await sleep(120); await type(c.t,'买域名和服务器'); await sleep(340);
-      const d = makeRow(1); await sleep(120); await type(d.t,'设计页面布局'); await sleep(430); check(d); await sleep(950);
-      const e = makeRow(0); await sleep(150); await type(e.t,'收集最新 AI 行业资讯'); await sleep(900);
+      const a=makeRow(0); await sleep(160); await type(a.t,tx('a')); await sleep(460); check(a); await sleep(880);
+      const b=makeRow(0); await sleep(150); await type(b.t,tx('b')); await sleep(380);
+      const c=makeRow(1); await sleep(120); await type(c.t,tx('c')); await sleep(340);
+      const d=makeRow(1); await sleep(120); await type(d.t,tx('d')); await sleep(430); check(d); await sleep(950);
+      const e=makeRow(0); await sleep(150); await type(e.t,tx('e')); await sleep(900);
       panel.classList.remove('out'); await sleep(1300);
       cursor.style.transition='none'; cursor.style.left='84%'; cursor.style.top='60%'; cursor.style.opacity='1'; await sleep(40);
       cursor.style.transition=''; cursor.style.left='97%'; cursor.style.top='50%'; await sleep(950);
       panel.classList.add('out'); await sleep(320); cursor.style.opacity='0'; await sleep(560);
-      const f = makeRow(0); await sleep(150); await type(f.t,'旅游物品准备'); await sleep(520);
-      const g = makeRow(0); await sleep(150); await type(g.t,'给白白换猫砂盆'); await sleep(470); check(g); await sleep(2000);
+      const f=makeRow(0); await sleep(150); await type(f.t,tx('f')); await sleep(520);
+      const g=makeRow(0); await sleep(150); await type(g.t,tx('g')); await sleep(470); check(g); await sleep(2000);
     }
   }
   run();
 })();
 
-/* 滚动进入视口时特性卡片淡入 */
+/* 特性卡淡入 */
 (function(){
   const cards = document.querySelectorAll('.feature');
   if(!('IntersectionObserver' in window)){ cards.forEach(c=>c.classList.add('in')); return; }
