@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SideInk — 让努力可见的桌面悬浮待办</title>
+<meta name="description" content="常驻屏幕右侧、鼠标贴边即拉出的便签式待办。临时腾空脑子，完成有烟花，还能让 AI 帮你收集信息写进 Obsidian。本地优先，隐私安心。">
+<link rel="icon" href="icon.png">
+<style>
+  :root{
+    --bg:#fef3c7; --paper:#fffbeb; --ink:#292524; --ink2:#57534e; --ink3:#a8a29e;
+    --accent:#b45309; --accent2:#92400e; --blue:#009BFF; --line:rgba(180,120,0,.18);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'PingFang SC',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+    color:var(--ink); line-height:1.6;
+    background:
+      repeating-linear-gradient(to bottom, rgba(150,110,55,.05) 0, rgba(150,110,55,.05) 1px, transparent 1px, transparent 30px),
+      linear-gradient(180deg,#fff7d6 0%, var(--bg) 40%, #fdeeb8 100%);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+  a{color:inherit;text-decoration:none}
+
+  /* 顶栏 */
+  nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;color:var(--accent2)}
+  .brand img{width:30px;height:30px;border-radius:7px}
+  .nav-links{display:flex;gap:22px;font-size:14px;color:var(--ink2)}
+  .nav-links a:hover{color:var(--accent)}
+
+  /* Hero */
+  .hero{display:grid;grid-template-columns:0.86fr 1.14fr;gap:40px;align-items:center;padding:44px 0 56px}
+  .eyebrow{display:inline-block;font-size:14px;font-weight:600;color:var(--accent);background:rgba(180,83,9,.1);padding:5px 13px;border-radius:999px;margin-bottom:18px}
+  .hero h1{font-size:46px;line-height:1.14;letter-spacing:-.5px;color:var(--ink)}
+  .hero h1 .hl{color:var(--accent)}
+  .hero .lead{margin-top:18px;font-size:17px;color:var(--ink2);max-width:30em}
+  .cta{margin-top:30px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .btn{
+    display:inline-flex;align-items:center;gap:9px;background:var(--accent);color:#fff;
+    font-size:16px;font-weight:600;padding:13px 24px;border-radius:10px;
+    box-shadow:0 6px 18px rgba(180,83,9,.28);transition:transform .12s, background .15s;
+  }
+  .btn:hover{background:var(--accent2);transform:translateY(-1px)}
+  .btn svg{width:18px;height:18px}
+  .btn-logo{width:24px;height:24px;border-radius:6px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+  .cta .meta{font-size:13px;color:var(--ink3)}
+  .free{color:var(--accent2);font-weight:700;background:rgba(180,83,9,.14);padding:2px 9px;border-radius:999px;white-space:nowrap}
+
+  /* 演示大窗：桌面 → 划边拉出便签 → 输入 → 大烟花 */
+  .stage{position:relative;width:100%;max-width:600px;margin:0;aspect-ratio:16/11;
+    overflow:hidden;border-radius:16px;box-shadow:0 26px 66px rgba(80,40,0,.26);border:1px solid rgba(0,0,0,.06)}
+  .screen{position:absolute;inset:0;overflow:hidden;
+    background:linear-gradient(160deg,#3a4a6b 0%,#5a6f92 45%,#caa17e 100%)}
+  .screen::before{content:"";position:absolute;inset:0;
+    background:radial-gradient(70% 55% at 22% 18%,rgba(255,255,255,.16),transparent 60%),
+               radial-gradient(60% 50% at 85% 90%,rgba(255,210,160,.22),transparent 60%)}
+  .menubar{position:absolute;top:0;left:0;right:0;height:26px;background:rgba(255,255,255,.14);
+    backdrop-filter:blur(6px);display:flex;align-items:center;gap:14px;padding:0 14px;z-index:2}
+  .menubar i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.5)}
+  .menubar i:first-child{background:#ff5f57}.menubar i:nth-child(2){background:#febc2e}.menubar i:nth-child(3){background:#28c840}
+  .cursor{position:absolute;left:40%;top:54%;z-index:8;width:26px;height:26px;
+    transition:left 1.05s cubic-bezier(.45,0,.2,1),top 1.05s cubic-bezier(.45,0,.2,1),opacity .35s;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+  /* 真实比例：右缘一条窄面板（约屏幕宽的 1/3），靠放大整屏保证清晰 */
+  .panel{position:absolute;top:30px;right:0;bottom:20px;width:34%;z-index:5;
+    background:repeating-linear-gradient(to bottom,rgba(150,110,55,.06) 0,rgba(150,110,55,.06) 1px,transparent 1px,transparent 24px),var(--bg);
+    background-position:0 18px;border-radius:5px 0 0 5px;box-shadow:-12px 0 34px rgba(60,30,0,.3);
+    padding:24px 12px 14px;overflow:visible;
+    transform:translateX(103%);transition:transform .62s cubic-bezier(.2,.78,.2,1)}
+  .panel.out{transform:translateX(0)}
+  .panel .clip{position:absolute;top:-13px;left:50%;transform:translateX(-50%);width:78px;filter:drop-shadow(0 3px 4px rgba(80,84,90,.26));z-index:6}
+  #demoRows{min-height:180px}
+  .demo-row{display:flex;align-items:flex-start;gap:7px;padding:5px 2px;opacity:0;transform:translateY(-3px);transition:opacity .22s,transform .22s}
+  .demo-row.show{opacity:1;transform:none}
+  .demo-row.sub{padding-left:20px}
+  .demo-cb{flex:0 0 auto;width:14px;height:14px;margin-top:2px;border:1.4px solid rgba(180,120,0,.45);border-radius:2.5px;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;transition:background .15s,border-color .15s}
+  .demo-row.sub .demo-cb{width:12px;height:12px}
+  .demo-cb.done{background:var(--blue);border-color:var(--blue)}
+  .demo-t{font-size:12px;color:var(--ink);line-height:1.35}
+  .demo-row.sub .demo-t{font-size:11px}
+  .demo-t.done{color:#8c867e}
+  .caret{display:inline-block;width:1.6px;height:1.05em;background:var(--accent);margin-left:1px;vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .spark{position:absolute;border-radius:50%;pointer-events:none;z-index:20}
+
+  /* 分区标题 */
+  .sec{padding:56px 0}
+  .sec h2{font-size:28px;text-align:center;color:var(--ink);letter-spacing:-.3px}
+  .sec .sub{text-align:center;color:var(--ink2);margin-top:10px;font-size:16px}
+
+  /* 特性 */
+  .grid{margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .card{background:rgba(255,255,255,.55);border:1px solid var(--line);border-radius:var(--radius);padding:22px 20px;
+    opacity:0;transform:scale(.92) translateY(16px);
+    transition:opacity .55s ease, transform .55s cubic-bezier(.2,.7,.2,1)}
+  .card.in{opacity:1;transform:none}
+  .card h3{margin-top:0;font-size:17px;color:var(--accent2);display:flex;align-items:center;gap:9px}
+  .card h3 .ic{font-size:21px;flex:none}
+  .card p{margin-top:9px;font-size:14px;color:var(--ink2)}
+
+  /* 结尾 CTA */
+  .final{text-align:center;padding:64px 0 40px}
+  .final h2{font-size:30px;color:var(--ink)}
+  .final p{margin-top:12px;color:var(--ink2);font-size:16px}
+  .final .cta{justify-content:center;margin-top:26px}
+
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--ink3);font-size:13px;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+  footer a:hover{color:var(--accent)}
+
+  @media (max-width:820px){
+    .hero{grid-template-columns:1fr;gap:36px;text-align:center;padding:30px 0 40px}
+    .hero .lead{margin-left:auto;margin-right:auto}
+    .cta{justify-content:center}
+    .nav-links{display:none}
+    .hero h1{font-size:34px}
+    .grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <div class="brand"><img src="icon.png" alt="SideInk"> SideInk</div>
+    <div class="nav-links">
+      <a href="#features">特性</a>
+      <a href="#why">为什么不一样</a>
+      <a href="#download">下载</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-text">
+      <div class="eyebrow">🧠 你的外挂前额叶</div>
+      <h1>想法太快，<br><span class="hl">别让它溜走</span></h1>
+      <p class="lead">AI 时代，脑子转得比手快。想随手记一下，却要找本子、掏手机、或在电脑上切来切去找那个记录软件——步步是摩擦；手机一划开，还容易掉进各种 App 黑洞。</p>
+      <p class="lead" style="margin-top:12px">SideInk 常驻屏幕边缘，<strong>鼠标贴边一划就能写</strong>，帮你清空杂念、专注当下。</p>
+      <div class="cta" id="download">
+        <a class="btn" href="https://github.com/linleeeeee/sideink-releases/releases/latest" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          下载 for macOS
+        </a>
+        <span class="meta">支持所有 Mac · <span class="free">限时免费中</span> · v3.0</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="screen" id="screen">
+        <div class="menubar"><i></i><i></i><i></i></div>
+        <svg class="cursor" id="cursor" viewBox="0 0 24 24" fill="#fff" stroke="#333" stroke-width="1"><path d="M5 3l14 8-6 1.5L10 20 5 3z"/></svg>
+        <div class="panel" id="demoPanel">
+          <img class="clip" src="clip.png" alt="">
+          <div id="demoRows"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- PAIN -->
+<div class="wrap">
+  <section class="sec" id="pain">
+    <h2>这些瞬间，你一定熟悉</h2>
+    <p class="sub">尤其当你是「快思考」的人。</p>
+    <div class="grid">
+      <div class="card"><h3><span class="ic">💭</span>想法一闪而过</h3><p>灵感来得快、去得也快。等你找到地方记，它已经没影了。</p></div>
+      <div class="card"><h3><span class="ic">📱</span>记着记着就刷起手机</h3><p>本想记一句，一划开手机就被 App 黑洞吞掉半小时。</p></div>
+      <div class="card"><h3><span class="ic">🌀</span>脑子塞满，反而做不好</h3><p>怕忘就一直在脑子里转，越转越焦虑，手上的事也没做好。</p></div>
+    </div>
+  </section>
+</div>
+
+<!-- FEATURES -->
+<div class="wrap">
+  <section class="sec" id="features">
+    <h2>为随手记而生</h2>
+    <p class="sub">不折腾、不打断，贴边一划就写。</p>
+    <div class="grid">
+      <div class="card"><h3><span class="ic">🪶</span>侧边隐藏，随喊随到</h3><p>藏在屏幕右缘，不占地方不碍眼。鼠标一划就出来，光标已就位、直接打字；记完移开自动藏起。</p></div>
+      <div class="card"><h3><span class="ic">✍️</span>自由书写两级待办</h3><p>整片区域自由书写，Tab 缩进成子待办。像写大纲一样组织，不是一格一格填表。</p></div>
+      <div class="card"><h3><span class="ic">🎆</span>经常庆功，就更容易成功</h3><p>每勾掉一条都放烟花庆祝，把自己哄着往前走——做事这件事，是可以被哄成功的。</p></div>
+      <div class="card"><h3><span class="ic">🤖</span>AI 帮你代劳</h3><p>「收集资讯」类待办交给 AI：自动抓取多源信息、整理成简报，直接写进你的 Obsidian。</p></div>
+      <div class="card"><h3><span class="ic">📌</span>钉住 &amp; 多桌面</h3><p>需要时一键钉住不收起，所有桌面都能看见；用完取消，回到贴边隐藏。</p></div>
+      <div class="card"><h3><span class="ic">🔒</span>本地优先</h3><p>待办、便签全部存在你自己的电脑，不上传服务器。AI 用你自己的 Key，数据你说了算。</p></div>
+    </div>
+  </section>
+
+  <!-- WHY -->
+  <section class="sec" id="why">
+    <h2>你的「外挂前额叶」</h2>
+    <p class="sub" style="max-width:42em;margin-left:auto;margin-right:auto">
+      前额叶负责计划、也负责收纳那些冒出来的念头；<br>
+      一旦超载，你就记不住、也静不下来。<br>
+      SideInk 替它<strong>接住这些念头</strong>——先倒进便签，杂念腾空了，才好专注手上的事。<br>
+      它不想成为第二个任务管理器：理清楚了，一键复制成 Markdown，挪进你常用的工具。<br>
+      <strong>轻，是它的功能。</strong>
+    </p>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="final">
+    <h2>把杂念腾空，让努力看见。</h2>
+    <p><span class="free">限时免费中</span> · 支持所有 Mac（Intel 与 Apple Silicon），即装即用。</p>
+    <div class="cta">
+      <a class="btn" href="https://github.com/linleeeeee/sideink-releases/releases/latest" target="_blank" rel="noopener">
+        <img class="btn-logo" src="icon.png" alt="">
+        下载 for macOS
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <div>© 2026 SideInk · v3.0</div>
+    <div style="display:flex;gap:18px">
+      <a href="https://github.com/linleeeeee/sideink-releases" target="_blank" rel="noopener">GitHub</a>
+      <a href="#features">特性</a>
+      <a href="#download">下载</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const rows = document.getElementById('demoRows');
+  const panel = document.getElementById('demoPanel');
+  const screen = document.getElementById('screen');
+  const cursor = document.getElementById('cursor');
+  if(!rows) return;
+  const COLORS = ['#009BFF','#7c3aed','#16a34a','#eab308','#f97316','#ef4444','#ec4899','#06b6d4','#00c2a8','#ff5da2'];
+  const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+  function makeRow(level){
+    const row = document.createElement('div');
+    row.className = 'demo-row' + (level ? ' sub' : '');
+    const cb = document.createElement('span'); cb.className = 'demo-cb';
+    const t = document.createElement('span'); t.className = 'demo-t';
+    row.appendChild(cb); row.appendChild(t); rows.appendChild(row);
+    requestAnimationFrame(()=>row.classList.add('show'));
+    return { row, cb, t };
+  }
+  async function type(t, text){
+    const caret = document.createElement('span'); caret.className = 'caret';
+    t.appendChild(caret);
+    for(const ch of text){ caret.insertAdjacentText('beforebegin', ch); await sleep(48 + Math.random()*42); }
+    caret.remove();
+  }
+  // 相对 panel 的局部坐标（不受 zoom 缩放影响）
+  function localPos(el){
+    let x = 0, y = 0, n = el;
+    while(n && n !== panel){ x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+    return { x: x + el.offsetWidth/2, y: y + el.offsetHeight/2 };
+  }
+  // 大烟花：多颗粒子高速四散 + 重力下坠，溢出便签之外
+  function burst(cb){
+    const c = localPos(cb);
+    const N = 30;
+    for(let i=0;i<N;i++){
+      const s = document.createElement('span'); s.className = 'spark';
+      const sz = 3 + Math.random()*3;
+      s.style.width = s.style.height = sz + 'px';
+      s.style.background = COLORS[i % COLORS.length];
+      s.style.left = c.x + 'px'; s.style.top = c.y + 'px';
+      panel.appendChild(s);
+      const ang = (i/N)*Math.PI*2 + Math.random()*0.3;
+      const dist = 40 + Math.random()*70;                 // 飞得远，溢出便签
+      const dx = Math.cos(ang)*dist;
+      const dy = Math.sin(ang)*dist + 18;                 // 略带重力下坠
+      requestAnimationFrame(()=>{
+        s.style.transition = 'transform .85s cubic-bezier(.15,.6,.3,1), opacity .85s ease-out';
+        s.style.transform = `translate(${dx}px, ${dy}px)`;
+        s.style.opacity = '0';
+      });
+      setTimeout(()=>s.remove(), 900);
+    }
+  }
+  function check(cell){ cell.cb.classList.add('done'); cell.cb.textContent='✓'; cell.t.classList.add('done'); burst(cell.cb); }
+
+  function reset(){
+    panel.classList.remove('out');
+    cursor.style.opacity = '1';
+    cursor.style.left = '40%'; cursor.style.top = '54%';
+    rows.innerHTML = '';
+  }
+
+  async function run(){
+    while(true){
+      reset();
+      await sleep(1000);
+      // 鼠标划向右边缘
+      cursor.style.left = '97%'; cursor.style.top = '48%';
+      await sleep(1150);
+      // 贴边拉出便签
+      panel.classList.add('out');
+      await sleep(300);
+      cursor.style.opacity = '0';
+      await sleep(560);
+      // 演示输入 + 完成放烟花
+      const a = makeRow(0); await sleep(160); await type(a.t,'研究心理-行为相关理论'); await sleep(460); check(a); await sleep(880);
+      const b = makeRow(0); await sleep(150); await type(b.t,'做个网站，放我的产品'); await sleep(380);
+      const c = makeRow(1); await sleep(120); await type(c.t,'买域名和服务器'); await sleep(340);
+      const d = makeRow(1); await sleep(120); await type(d.t,'设计页面布局'); await sleep(430); check(d); await sleep(950);
+      const e = makeRow(0); await sleep(150); await type(e.t,'收集最新 AI 行业资讯'); await sleep(900);
+      // 收起便签（好像先去忙别的）
+      panel.classList.remove('out');
+      await sleep(1300);
+      // 突然想起来——光标划回右缘，把便签又拉出来
+      cursor.style.transition = 'none';
+      cursor.style.left = '84%'; cursor.style.top = '60%'; cursor.style.opacity = '1';
+      await sleep(40);
+      cursor.style.transition = '';
+      cursor.style.left = '97%'; cursor.style.top = '50%';
+      await sleep(950);
+      panel.classList.add('out');
+      await sleep(320);
+      cursor.style.opacity = '0';
+      await sleep(560);
+      // 继续补记后两条
+      const f = makeRow(0); await sleep(150); await type(f.t,'旅游物品准备'); await sleep(520);
+      const g = makeRow(0); await sleep(150); await type(g.t,'给白白换猫砂盆'); await sleep(470); check(g); await sleep(2000);
+    }
+  }
+  run();
+})();
+
+/* 滚动到视口时，卡片放大淡入 */
+(function(){
+  const cards = document.querySelectorAll('.card');
+  if(!('IntersectionObserver' in window)){ cards.forEach(c=>c.classList.add('in')); return; }
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold:.15, rootMargin:'0px 0px -8% 0px' });
+  cards.forEach((c,i)=>{ c.style.transitionDelay = (i%3)*80 + 'ms'; io.observe(c); });
+})();
+</script>
+
+</body>
+</html>
