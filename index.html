@@ -62,14 +62,14 @@
   .panel.out{transform:translateX(0)}
   .panel .clip{position:absolute;top:-13px;left:50%;transform:translateX(-50%);width:78px;filter:drop-shadow(0 3px 4px rgba(80,84,90,.26));z-index:6}
   #demoRows{min-height:180px}
-  .demo-row{display:flex;align-items:center;gap:8px;height:26px;padding:0 2px;opacity:0;transform:translateY(-3px);transition:opacity .22s,transform .22s}
+  .demo-row{display:flex;align-items:center;gap:8px;padding:3px 2px;opacity:0;transform:translateY(-3px);transition:opacity .22s,transform .22s}
   .demo-row.show{opacity:1;transform:none}
-  .demo-row.sub{padding-left:22px}
+  .demo-row.demo-sub{padding-left:18px}
   .demo-cb{flex:0 0 auto;width:15px;height:15px;border:1.4px solid rgba(180,120,0,.45);border-radius:3px;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;transition:background .15s,border-color .15s}
-  .demo-row.sub .demo-cb{width:13px;height:13px}
+  .demo-row.demo-sub .demo-cb{width:13px;height:13px}
   .demo-cb.done{background:#009BFF;border-color:#009BFF}
-  .demo-t{font-size:12.5px;color:#292524;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .demo-row.sub .demo-t{font-size:11.5px}
+  .demo-t{font-size:12.5px;color:#292524;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .demo-row.demo-sub .demo-t{font-size:11.5px}
   .demo-t.done{color:#8c867e}
   .caret{display:inline-block;width:1.6px;height:1.05em;background:#b45309;margin-left:1px;vertical-align:-2px;animation:blink 1s steps(1) infinite}
   @keyframes blink{50%{opacity:0}}
@@ -287,7 +287,7 @@ function toggleLang(){
   const tx = k => enMode() ? T[k][1] : T[k][0];
   function makeRow(level){
     const row = document.createElement('div');
-    row.className = 'demo-row' + (level ? ' sub' : '');
+    row.className = 'demo-row' + (level ? ' demo-sub' : '');
     const cb = document.createElement('span'); cb.className = 'demo-cb';
     const t = document.createElement('span'); t.className = 'demo-t';
     row.appendChild(cb); row.appendChild(t); rows.appendChild(row);
