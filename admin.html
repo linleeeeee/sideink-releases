@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>SideInk · 反馈后台</title>
+<style>
+  :root { color-scheme: light dark; --bg:#f7f6f3; --card:#fff; --line:#e7e3da; --t1:#2b2a27; --t2:#6b675f; --accent:#b5761f; }
+  @media (prefers-color-scheme: dark){ :root{ --bg:#1c1b19; --card:#26241f; --line:#38352e; --t1:#ece8df; --t2:#a29c8f; --accent:#e0a94a; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--t1); font:14px/1.6 -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif; }
+  .wrap { max-width:760px; margin:0 auto; padding:24px 16px 60px; }
+  h1 { font-size:18px; margin:0 0 4px; }
+  .sub { color:var(--t2); font-size:12px; margin:0 0 18px; }
+  .bar { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; align-items:center; }
+  input { flex:1; min-width:180px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--card); color:var(--t1); font:inherit; }
+  button { padding:9px 15px; border:none; border-radius:9px; background:var(--accent); color:#fff; font:inherit; font-weight:600; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--accent); border:1px solid var(--line); }
+  .count { color:var(--t2); font-size:12px; margin-left:auto; }
+  .item { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:13px 15px; margin-bottom:10px; }
+  .item .txt { white-space:pre-wrap; word-break:break-word; }
+  .item .meta { margin-top:8px; font-size:11px; color:var(--t2); display:flex; gap:12px; flex-wrap:wrap; }
+  .item .meta b { color:var(--t1); font-weight:600; }
+  .empty { color:var(--t2); text-align:center; padding:40px 0; }
+  .err { color:#c0392b; font-size:13px; margin:8px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SideInk · 反馈后台</h1>
+  <p class="sub">用户在便签写「@sideink …」发来的反馈，最新在最上面。</p>
+  <div class="bar">
+    <input id="tok" type="password" placeholder="管理口令（ADMIN_TOKEN）" autocomplete="off">
+    <button onclick="load()">加载</button>
+    <button class="ghost" onclick="logout()">清除口令</button>
+    <span class="count" id="count"></span>
+  </div>
+  <div id="err" class="err"></div>
+  <div id="list"></div>
+</div>
+<script>
+  const $ = id => document.getElementById(id);
+  const KEY = 'sideink_admin_token';
+  $('tok').value = localStorage.getItem(KEY) || '';
+
+  function logout(){ localStorage.removeItem(KEY); $('tok').value=''; $('list').innerHTML=''; $('count').textContent=''; }
+
+  function fmtTime(ts){
+    if(!ts) return '';
+    const d = new Date(ts);
+    const p = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+  async function load(){
+    const tok = $('tok').value.trim();
+    $('err').textContent='';
+    if(!tok){ $('err').textContent='请先输入管理口令'; return; }
+    localStorage.setItem(KEY, tok);
+    try{
+      const r = await fetch('/api/admin-feedback', { headers: { 'x-admin-token': tok }, cache:'no-store' });
+      if(r.status===401){ $('err').textContent='口令不对'; return; }
+      if(!r.ok){ $('err').textContent='加载失败：HTTP '+r.status; return; }
+      const data = await r.json();
+      render(data.items||[]);
+      $('count').textContent = (data.count||0)+' 条';
+    }catch(e){ $('err').textContent='网络错误：'+e.message; }
+  }
+
+  function render(items){
+    if(!items.length){ $('list').innerHTML='<div class="empty">还没有反馈</div>'; return; }
+    $('list').innerHTML = items.map(it=>`
+      <div class="item">
+        <div class="txt">${esc(it.text)}</div>
+        <div class="meta">
+          <span>${fmtTime(it.ts)}</span>
+          ${it.version?`<span>v<b>${esc(it.version)}</b></span>`:''}
+          ${it.platform?`<span>${esc(it.platform)}</span>`:''}
+          ${it.install?`<span>设备 ${esc(String(it.install).slice(0,8))}</span>`:''}
+          ${it.ip?`<span>${esc(String(it.ip).split(',')[0])}</span>`:''}
+        </div>
+      </div>`).join('');
+  }
+
+  if($('tok').value) load();
+</script>
+</body>
+</html>
