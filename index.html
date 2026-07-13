@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SideInk</title>
-<meta name="description" content="SideInk is a floating sticky-note to-do for macOS. Swipe the screen edge to jot, clear your mind, stay focused. Local-only, no login, no tracking.">
+<meta name="description" content="SideInk turns your scattered thoughts into action. Swipe the screen edge to capture, let AI organize and break things down, and actually get them done. A quiet AI thinking companion for macOS. Local-first, no login.">
 <link rel="icon" href="icon.png">
 <style>
   :root{
     --bg:#ffffff; --soft:#f6f9fc; --soft2:#eef5fb;
     --ink:#111827; --ink2:#536173; --ink3:#94a3b8;
     --line:#e6edf5; --blue:#009BFF; --blue-ink:#0077cc; --blue-soft:#e8f6ff;
-    --mint:#12b981; --lemon:#facc15; --paper:#fff3bf; --rose:#fb7185;
+    --mint:#12b981; --lemon:#facc15; --paper:#fff3bf; --rose:#fb7185; --violet:#7c3aed;
     --radius:14px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -20,13 +20,15 @@
     font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',Arial,sans-serif;
     color:var(--ink);
     background:
-      radial-gradient(900px 520px at 92% 8%, rgba(0,155,255,.12), transparent 60%),
-      radial-gradient(680px 420px at 8% 18%, rgba(18,185,129,.10), transparent 62%),
+      radial-gradient(900px 520px at 92% 4%, rgba(0,155,255,.12), transparent 60%),
+      radial-gradient(680px 420px at 6% 14%, rgba(18,185,129,.10), transparent 62%),
       linear-gradient(180deg,#fff 0%,#fbfdff 42%,#fff 100%);
     line-height:1.6;
     -webkit-font-smoothing:antialiased;
   }
   a{color:inherit;text-decoration:none}
+  h1,h2,h3{text-wrap:balance}
+  p{text-wrap:pretty}
   .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
 
   nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.78);backdrop-filter:saturate(180%) blur(18px);border-bottom:1px solid rgba(230,237,245,.82)}
@@ -44,107 +46,186 @@
   .btn-primary img{width:20px;height:20px;border-radius:5px;background:#fff}
   .nav-right .btn-primary{padding:10px 18px;font-size:16px}
 
-  .hero{position:relative;display:grid;grid-template-columns:1fr 1.22fr;gap:52px;align-items:center;padding:88px 0 96px}
-  .hero::before{content:"";position:absolute;left:-32px;top:60px;width:118px;height:118px;border:1px solid rgba(0,155,255,.14);border-radius:28px;transform:rotate(-12deg);pointer-events:none}
+  /* ---------- HERO ---------- */
+  .hero{position:relative;display:grid;grid-template-columns:1fr 1.18fr;gap:52px;align-items:center;padding:82px 0 76px}
   .eyebrow{display:inline-flex;align-items:center;gap:8px;margin-bottom:18px;color:var(--blue-ink);font-size:14px;font-weight:700;letter-spacing:.02em;background:rgba(232,246,255,.72);border:1px solid rgba(0,155,255,.14);border-radius:999px;padding:7px 12px}
   .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 5px rgba(18,185,129,.13)}
-  .hero h1{font-size:64px;line-height:1.04;letter-spacing:-1.6px;font-weight:850}
-  .hero .sub{margin-top:24px;font-size:21px;line-height:1.65;color:var(--ink2);max-width:29em;font-weight:450}
-  .hero-cta{margin-top:36px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .hero h1{font-size:60px;line-height:1.06;letter-spacing:-1.6px;font-weight:850}
+  .hero h1 .g{background:linear-gradient(120deg,var(--blue),var(--mint));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .sub{margin-top:22px;font-size:20px;line-height:1.62;color:var(--ink2);max-width:30em;font-weight:450}
+  .hero-cta{margin-top:34px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   .hero-cta .btn-primary{padding:15px 28px;font-size:17px}
-  .trust{margin-top:22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink3)}
+  .quiet{font-size:14px;color:var(--ink3);font-weight:500}
+  .trust{margin-top:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink3)}
   .trust b{color:var(--ink2);font-weight:650}
   .trust .dot{width:4px;height:4px;border-radius:50%;background:#cbd5e1}
 
   .stage{position:relative;width:100%;max-width:700px;aspect-ratio:16/10.5;margin-left:auto;
     overflow:hidden;border-radius:24px;box-shadow:0 36px 90px -24px rgba(15,23,42,.36),0 0 0 1px rgba(15,23,42,.06)}
-  .stage::after{content:"";position:absolute;inset:12px;border-radius:18px;border:1px solid rgba(255,255,255,.22);pointer-events:none;z-index:30}
   .screen{position:absolute;inset:0;overflow:hidden;background:
     linear-gradient(150deg,#1e293b,#334155 48%,#8aa5b9),
     linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px)}
   .screen::before{content:"";position:absolute;inset:0;background:
     radial-gradient(55% 45% at 28% 16%,rgba(255,255,255,.20),transparent 62%),
     radial-gradient(28% 34% at 72% 70%,rgba(0,155,255,.18),transparent 70%)}
-  .screen::after{content:"";position:absolute;left:34px;right:48%;top:78px;bottom:58px;border-radius:18px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);backdrop-filter:blur(2px)}
   .menubar{position:absolute;top:0;left:0;right:0;height:26px;background:rgba(255,255,255,.16);backdrop-filter:blur(6px);display:flex;align-items:center;gap:8px;padding:0 13px;z-index:2}
   .menubar i{width:9px;height:9px;border-radius:50%}
   .menubar i:nth-child(1){background:#ff5f57}.menubar i:nth-child(2){background:#febc2e}.menubar i:nth-child(3){background:#28c840}
   .cursor{position:absolute;left:40%;top:54%;z-index:8;width:24px;height:24px;
     transition:left 1.05s cubic-bezier(.45,0,.2,1),top 1.05s cubic-bezier(.45,0,.2,1),opacity .35s;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
-  .panel{position:absolute;top:34px;right:0;bottom:22px;width:42%;z-index:5;
+  .panel{position:absolute;top:34px;right:0;bottom:22px;width:30%;z-index:5;
     background:linear-gradient(180deg,#fff5c9,#ffef9f);border-radius:10px 0 0 10px;box-shadow:-18px 0 42px rgba(15,23,42,.30),inset 1px 0 rgba(255,255,255,.55);
-    padding:32px 17px 16px;overflow:visible;transform:translateX(103%);transition:transform .62s cubic-bezier(.2,.78,.2,1)}
+    padding:28px 12px 14px;overflow:visible;transform:translateX(103%);transition:transform .62s cubic-bezier(.2,.78,.2,1)}
   .panel.out{transform:translateX(0)}
-  .panel .clip{position:absolute;top:-15px;left:50%;transform:translateX(-50%);width:88px;filter:drop-shadow(0 3px 4px rgba(80,84,90,.26));z-index:6}
-  #demoRows{min-height:200px}
-  .demo-row{display:flex;align-items:center;gap:9px;padding:4px 2px;opacity:0;transform:translateY(-3px);transition:opacity .22s,transform .22s}
+  .panel .clip{position:absolute;top:-13px;left:50%;transform:translateX(-50%);width:70px;filter:drop-shadow(0 3px 4px rgba(80,84,90,.26));z-index:6}
+  #demoRows{min-height:180px}
+  .demo-row{display:flex;align-items:center;gap:6px;padding:3px 1px;opacity:0;transform:translateY(-3px);transition:opacity .22s,transform .22s}
   .demo-row.show{opacity:1;transform:none}
-  .demo-row.demo-sub{padding-left:20px}
-  .demo-cb{flex:0 0 auto;width:17px;height:17px;border:1.5px solid rgba(180,120,0,.45);border-radius:3.5px;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;transition:background .15s,border-color .15s}
-  .demo-row.demo-sub .demo-cb{width:15px;height:15px}
+  .demo-row.demo-sub{padding-left:15px}
+  .demo-cb{flex:0 0 auto;width:14px;height:14px;border:1.5px solid rgba(180,120,0,.45);border-radius:3px;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:8px;transition:background .15s,border-color .15s}
+  .demo-row.demo-sub .demo-cb{width:12px;height:12px}
   .demo-cb.done{background:#009BFF;border-color:#009BFF}
-  .demo-t{font-size:14px;color:#292524;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .demo-row.demo-sub .demo-t{font-size:13px}
+  .demo-t{font-size:11px;color:#292524;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .demo-row.demo-sub .demo-t{font-size:10px}
   .demo-t.done{color:#8c867e}
   .caret{display:inline-block;width:1.6px;height:1.05em;background:#b45309;margin-left:1px;vertical-align:-2px;animation:blink 1s steps(1) infinite}
   @keyframes blink{50%{opacity:0}}
   .spark{position:absolute;border-radius:50%;pointer-events:none;z-index:20}
 
-  .section{padding:96px 0}
-  .section.soft{background:linear-gradient(180deg,rgba(246,249,252,.92),rgba(238,245,251,.72));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-  .sec-head{text-align:center;max-width:34em;margin:0 auto 60px}
-  .sec-head h2{font-size:42px;letter-spacing:-.9px;font-weight:800;line-height:1.12}
+  /* ---------- FLOW STRIP ---------- */
+  .flow-sec{padding:6px 0 42px}
+  .flow{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .flow .step{display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.82);border:1px solid var(--line);border-radius:999px;padding:11px 20px;box-shadow:0 12px 30px -22px rgba(15,23,42,.5);font-size:15.5px;font-weight:600}
+  .flow .from{color:var(--ink3)}
+  .flow .arw{color:var(--blue);font-weight:800}
+  .flow .to{color:var(--ink)}
+
+  /* ---------- SECTION SHELL ---------- */
+  .section{padding:92px 0}
+  .section.soft{background:linear-gradient(180deg,rgba(246,249,252,.94),rgba(238,245,251,.74));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .sec-head{text-align:center;max-width:36em;margin:0 auto 56px}
+  .sec-head .kick{display:inline-block;color:var(--blue-ink);font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px}
+  .sec-head h2{font-size:42px;letter-spacing:-.9px;font-weight:820;line-height:1.14}
   .sec-head p{margin-top:14px;font-size:19px;color:var(--ink2)}
 
-  .features{display:grid;grid-template-columns:repeat(2,1fr);gap:26px}
-  .feature{position:relative;overflow:hidden;background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:18px;padding:34px 34px 36px;
-    box-shadow:0 1px 2px rgba(15,23,42,.03),0 18px 42px -26px rgba(15,23,42,.22);
-    opacity:0;transform:translateY(18px);transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.2,1),box-shadow .18s}
-  .feature::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--blue),var(--mint),var(--lemon))}
-  .feature:hover,.feature.in:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(15,23,42,.04),0 24px 52px -28px rgba(15,23,42,.28)}
-  .feature.in{opacity:1;transform:none}
-  .fi{width:56px;height:56px;border-radius:15px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--blue-soft),#f0fff9);color:var(--blue);margin-bottom:22px;box-shadow:inset 0 0 0 1px rgba(0,155,255,.08)}
-  .fi svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-  .feature h3{font-size:22px;font-weight:800;letter-spacing:-.3px}
-  .feature p{margin-top:11px;font-size:16.5px;color:var(--ink2);line-height:1.65}
-  .mini-demo{margin-top:24px;min-height:150px;border-radius:16px;background:linear-gradient(145deg,#f8fbff,#fff);border:1px solid var(--line);padding:16px;position:relative;overflow:hidden}
-  .mini-panel{position:relative;background:linear-gradient(180deg,#fff6cf,#ffefa5);border-radius:12px;padding:14px;box-shadow:0 16px 34px -24px rgba(15,23,42,.45);min-height:118px}
-  .mini-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;color:#8a6a16;font-size:12px;font-weight:700}
-  .mini-pin{width:18px;height:18px;border-radius:50%;border:1.5px solid #d6a71d;display:inline-flex;align-items:center;justify-content:center;color:#b98207;animation:pinPop 4.2s infinite}
-  .mini-line{height:9px;border-radius:999px;background:rgba(120,92,12,.18);margin:9px 0}
-  .mini-line.short{width:62%}
-  .mini-line.mid{width:78%}
-  .mini-mark{background:rgba(250,204,21,.42);border-radius:5px;padding:0 4px;color:#3f3211}
-  .mention{color:#0077cc;background:rgba(0,155,255,.12);border-radius:999px;padding:1px 6px;font-weight:700}
-  .format-bar{display:flex;gap:7px;margin:9px 0}
-  .format-bar span{font-size:11px;font-weight:800;color:#6b5210;background:rgba(255,255,255,.62);border:1px solid rgba(214,167,29,.28);border-radius:6px;padding:2px 6px}
-  .fire-demo .mini-panel{display:flex;align-items:center;justify-content:center}
-  .done-pill{display:flex;align-items:center;gap:10px;color:#3f3211;font-weight:700}
-  .done-box{width:21px;height:21px;border-radius:6px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;animation:checkPulse 3.8s infinite}
-  .mini-spark{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--blue);left:50%;top:52%;opacity:0;animation:miniBurst 3.8s infinite}
-  .mini-spark:nth-child(2){background:var(--mint);--x:44px;--y:-38px;animation-delay:.05s}
-  .mini-spark:nth-child(3){background:var(--lemon);--x:-48px;--y:-30px;animation-delay:.09s}
-  .mini-spark:nth-child(4){background:var(--rose);--x:38px;--y:34px;animation-delay:.13s}
-  .mini-spark:nth-child(5){background:#7c3aed;--x:-36px;--y:38px;animation-delay:.17s}
-  .break-demo .subtask{opacity:0;transform:translateY(-8px);animation:subReveal 5s infinite}
-  .break-demo .subtask:nth-child(3){animation-delay:.18s}
-  .break-demo .subtask:nth-child(4){animation-delay:.36s}
-  .break-demo .subtask:nth-child(5){animation-delay:.54s}
-  .mini-chip{display:inline-flex;align-items:center;border-radius:999px;background:rgba(0,155,255,.12);color:#0077cc;font-size:12px;font-weight:800;padding:4px 8px;margin-bottom:9px}
-  .ai-demo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .ai-card{border-radius:12px;background:rgba(255,255,255,.72);border:1px solid rgba(230,237,245,.9);padding:12px;min-height:118px}
-  .ai-dots{display:inline-flex;gap:4px;margin-left:5px;vertical-align:middle}
-  .ai-dots i{width:4px;height:4px;border-radius:50%;background:var(--blue);animation:dotBlink 1.1s infinite}
-  .ai-dots i:nth-child(2){animation-delay:.15s}.ai-dots i:nth-child(3){animation-delay:.3s}
-  .obsidian-note{opacity:0;animation:noteIn 4.8s infinite}
-  @keyframes pinPop{0%,22%{transform:scale(1);background:transparent}28%,52%{transform:scale(1.12);background:#fff}58%,100%{transform:scale(1);background:transparent}}
-  @keyframes checkPulse{0%,28%{transform:scale(.9);background:rgba(255,255,255,.7);color:transparent;box-shadow:inset 0 0 0 1.5px rgba(180,120,0,.45)}34%,100%{transform:scale(1);background:var(--blue);color:#fff;box-shadow:none}}
-  @keyframes miniBurst{0%,34%{opacity:0;transform:translate(0,0) scale(.4)}45%{opacity:1}70%,100%{opacity:0;transform:translate(var(--x,32px),var(--y,-30px)) scale(1)}}
-  @keyframes subReveal{0%,30%{opacity:0;transform:translateY(-8px)}40%,82%{opacity:1;transform:none}100%{opacity:0;transform:translateY(4px)}}
-  @keyframes dotBlink{50%{opacity:.25;transform:translateY(-2px)}}
-  @keyframes noteIn{0%,38%{opacity:0;transform:translateY(8px)}50%,88%{opacity:1;transform:none}100%{opacity:0;transform:translateY(4px)}}
+  /* ---------- PILLARS ---------- */
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .pillar{position:relative;overflow:hidden;background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:20px;padding:34px 30px 32px;
+    box-shadow:0 1px 2px rgba(15,23,42,.03),0 18px 42px -28px rgba(15,23,42,.24);text-align:center}
+  .pillar .pi{width:58px;height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;background:linear-gradient(135deg,var(--blue-soft),#f0fff9);color:var(--blue);box-shadow:inset 0 0 0 1px rgba(0,155,255,.08)}
+  .pillar .pi svg{width:29px;height:29px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .pillar h3{font-size:21px;font-weight:800;letter-spacing:-.3px}
+  .pillar .step-tag{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--blue-ink);opacity:.7;margin-bottom:8px}
+  .pillar p{margin-top:10px;font-size:16px;color:var(--ink2);line-height:1.65}
 
-  .privacy{display:flex;align-items:center;gap:28px;max-width:820px;margin:0 auto;flex-wrap:wrap;justify-content:center;background:rgba(255,255,255,.78);border:1px solid var(--line);border-radius:24px;padding:34px;box-shadow:0 24px 60px -38px rgba(15,23,42,.26)}
+  /* ---------- FEATURE BANDS ---------- */
+  .band{padding:70px 0}
+  .band-in{display:grid;grid-template-columns:1.05fr 1fr;gap:60px;align-items:center;max-width:1080px;margin:0 auto;padding:0 24px}
+  .band-txt{order:1}.band .demo{order:2}
+  .band.rev .band-in{grid-template-columns:1fr 1.05fr}
+  .band.rev .band-txt{order:2}.band.rev .demo{order:1}
+  .kicker{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-ink);background:var(--blue-soft);border:1px solid rgba(0,155,255,.16);border-radius:999px;padding:6px 13px;margin-bottom:18px}
+  .band-txt h3{font-size:33px;letter-spacing:-.6px;font-weight:820;line-height:1.16}
+  .band-txt p{margin-top:15px;font-size:17.5px;color:var(--ink2);line-height:1.72;max-width:30em}
+  .band-txt .mini-list{margin-top:18px;display:flex;flex-direction:column;gap:9px}
+  .band-txt .mini-list li{list-style:none;display:flex;align-items:center;gap:10px;font-size:15.5px;color:var(--ink2)}
+  .band-txt .mini-list svg{flex:0 0 auto;width:18px;height:18px;stroke:var(--mint);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ---------- DEMO STAGES (generic) ---------- */
+  .demo{position:relative;width:100%;aspect-ratio:16/11;border-radius:22px;overflow:hidden;
+    background:linear-gradient(158deg,#e9f2fb,#f7fbff 58%,#eef6ff);
+    box-shadow:0 30px 70px -30px rgba(15,23,42,.34),0 0 0 1px rgba(15,23,42,.05)}
+  .demo .win{position:absolute;left:7%;top:14%;width:50%;height:64%;border-radius:13px;background:rgba(255,255,255,.72);box-shadow:0 20px 44px -28px rgba(15,23,42,.5),inset 0 0 0 1px rgba(255,255,255,.6);overflow:hidden}
+  .demo .win-bar{height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;background:rgba(255,255,255,.5)}
+  .demo .win-bar i{width:8px;height:8px;border-radius:50%;background:#cfd8e3}
+  .demo .win-bar i:nth-child(1){background:#ff5f57}.demo .win-bar i:nth-child(2){background:#febc2e}.demo .win-bar i:nth-child(3){background:#28c840}
+  .demo .wl{height:8px;border-radius:999px;background:rgba(120,140,165,.18);margin:13px 14px}
+  .demo .wl.s{width:52%}.demo .wl.m{width:72%}
+  .dcursor{position:absolute;left:38%;top:52%;z-index:25;width:22px;height:22px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4));
+    transition:left .82s cubic-bezier(.45,0,.2,1),top .82s cubic-bezier(.45,0,.2,1),opacity .3s}
+
+  .note2{position:absolute;top:12%;bottom:12%;right:6%;width:44%;z-index:10;
+    background:linear-gradient(180deg,#fff6cf,#ffefa5);border-radius:12px;
+    box-shadow:0 24px 48px -22px rgba(120,90,10,.55),inset 1px 0 rgba(255,255,255,.6);
+    padding:26px 15px 14px}
+  .clip2{position:absolute;top:-13px;left:50%;transform:translateX(-50%);width:70px;filter:drop-shadow(0 3px 4px rgba(80,84,90,.26));z-index:2}
+  .r{display:flex;align-items:flex-start;gap:8px;padding:5px 2px;font-size:13.5px;color:#3a3320;line-height:1.42}
+  .cb{flex:0 0 auto;width:16px;height:16px;border:1.5px solid rgba(180,120,0,.5);border-radius:4px;margin-top:1px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;transition:background .16s,border-color .16s,transform .16s}
+  .cb.on{background:var(--blue);border-color:var(--blue)}
+  .r.done .rt{color:#a49a80}
+  .rt{min-height:1em}
+
+  /* capture note slides in */
+  .cap-note{transform:translateX(122%);transition:transform .6s cubic-bezier(.2,.78,.2,1)}
+  .cap-note.out{transform:none}
+
+  /* hero-style dark screen demos (capture + pin) */
+  .screendemo{background:#0f172a;padding:0}
+  .screendemo .screen{position:absolute;inset:0;border-radius:22px}
+
+  /* static pin note */
+  .pin-panel{width:38%;padding:28px 13px 16px}
+  .pin-panel .clip{width:58px}
+  .pinpush{position:absolute;top:-9px;right:10px;font-size:21px;line-height:1;z-index:7;transform:rotate(8deg);filter:drop-shadow(0 2px 3px rgba(0,0,0,.28))}
+  .pinrow{display:flex;align-items:flex-start;gap:8px;padding:6px 2px;font-size:12.5px;line-height:1.5;color:#3a3320}
+  .pincb{flex:0 0 auto;width:14px;height:14px;border:1.5px solid rgba(180,120,0,.5);border-radius:3.5px;background:rgba(255,255,255,.55);margin-top:2px}
+  .pintext{white-space:normal}
+  .hl-at{color:#0077cc;font-weight:700;background:rgba(0,155,255,.12);border-radius:4px;padding:0 4px}
+  .hl-time{color:#b45309;font-weight:800;background:rgba(250,204,21,.5);border-radius:4px;padding:0 4px}
+  .hl-pct{color:#0a8f5b;font-weight:800;background:rgba(18,185,129,.16);border-radius:4px;padding:0 4px}
+
+  /* toast (AI done) */
+  .toast{position:absolute;top:12%;left:50%;transform:translate(-50%,-8px);z-index:30;
+    background:rgba(17,24,39,.92);color:#fff;font-size:12.5px;font-weight:700;border-radius:999px;padding:7px 15px;
+    box-shadow:0 12px 30px -12px rgba(0,0,0,.6);opacity:0;transition:opacity .35s,transform .35s;pointer-events:none}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* pin + highlight */
+  .pin-note{transform:translateX(122%);transition:transform .55s cubic-bezier(.2,.78,.2,1),box-shadow .3s}
+  .pin-note.out{transform:none}
+  .pin-note.pinned{box-shadow:0 0 0 2px var(--blue),0 24px 48px -22px rgba(120,90,10,.55)}
+  .pinbtn{position:absolute;top:5px;right:8px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(255,255,255,.45);transition:transform .28s,background .28s;z-index:3}
+  .pin-note.pinned .pinbtn{background:var(--blue);transform:rotate(-18deg) scale(1.12)}
+  .hl{border-radius:4px;padding:0 2px;background:linear-gradient(rgba(250,204,21,0),rgba(250,204,21,0));transition:background .45s}
+  .hl.on{background:linear-gradient(rgba(250,204,21,.8),rgba(250,204,21,.8))}
+  .chip{display:inline-block;color:#0077cc;background:rgba(0,155,255,.14);border-radius:999px;padding:0 7px;font-weight:700;font-size:12.5px;line-height:1.5}
+
+  /* fireworks */
+  .fire-note{left:24%;right:24%;width:auto;top:35%;bottom:auto;padding:22px 18px}
+  .fire-note .r{font-size:15px;justify-content:center}
+  .fire-note .cb{width:20px;height:20px;font-size:12px}
+
+  /* split */
+  .split-head{display:flex;align-items:center;gap:8px;padding:5px 2px;font-size:13.5px;color:#3a3320;font-weight:600}
+  .splitbtn{margin-left:auto;font-size:11px;font-weight:800;color:#0077cc;background:rgba(0,155,255,.14);border:1px solid rgba(0,155,255,.22);border-radius:999px;padding:3px 9px;white-space:nowrap;transition:background .2s,color .2s;flex:0 0 auto}
+  .splitbtn.busy{color:#8a6a16;background:rgba(250,204,21,.24);border-color:rgba(214,167,29,.3)}
+  .subs{margin-top:3px}
+  .subitem{display:flex;align-items:center;gap:8px;padding:4px 2px 4px 18px;font-size:12.5px;color:#4a4128;opacity:0;transform:translate(-4px,-6px);transition:opacity .3s,transform .3s}
+  .subitem.in{opacity:1;transform:none}
+  .subitem .cb{width:14px;height:14px}
+  .subitem .brc{color:rgba(180,120,0,.55);margin-left:-11px;margin-right:-2px}
+
+  /* AI + obsidian */
+  .ai-note{left:auto;right:6%;width:40%;top:15%;bottom:auto}
+  .ai-status{margin-top:10px;font-size:12px;color:#8a6a16;font-weight:700;display:flex;align-items:center;gap:7px;min-height:16px}
+  .ai-status.done{color:var(--mint)}
+  .dots{display:inline-flex;gap:4px}
+  .dots i{width:4px;height:4px;border-radius:50%;background:#b98207;animation:dotBlink 1.1s infinite}
+  .dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+  @keyframes dotBlink{50%{opacity:.25;transform:translateY(-2px)}}
+  .obs{position:absolute;left:6%;top:15%;bottom:15%;width:44%;border-radius:12px;background:#ffffff;color:#334155;
+    padding:13px 14px;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;border:1px solid #e6edf5;
+    box-shadow:0 24px 50px -26px rgba(15,23,42,.4);opacity:0;transform:translateY(14px) scale(.98);transition:opacity 1s ease,transform 1s ease;z-index:8;overflow:hidden}
+  .obs.show{opacity:1;transform:none}
+  .obs .fname{color:#64748b;margin-bottom:9px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .obs .fname::before{content:"";width:9px;height:11px;border-radius:1.5px;background:#7c66d9;box-shadow:2px 0 0 -1px #fff,3px 0 0 -1px #a78bfa}
+  .obs .oh{color:#2563eb}
+  .obs .ob{color:#059669}
+  .obs .oline{opacity:0;transform:translateY(4px);transition:opacity .3s,transform .3s;margin:3px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .obs .oline.vis{opacity:1;transform:none}
+
+  /* ---------- PRIVACY ---------- */
+  .privacy{display:flex;align-items:center;gap:28px;max-width:820px;margin:0 auto;flex-wrap:wrap;justify-content:center;background:rgba(255,255,255,.82);border:1px solid var(--line);border-radius:24px;padding:34px;box-shadow:0 24px 60px -38px rgba(15,23,42,.26)}
   .privacy .shield{flex:0 0 auto;width:68px;height:68px;border-radius:20px;background:linear-gradient(135deg,var(--blue-soft),#f0fff9);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--blue)}
   .privacy .shield svg{width:32px;height:32px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .privacy .ptxt{text-align:left;min-width:260px;flex:1}
@@ -153,29 +234,47 @@
   .badges{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
   .badge{font-size:14px;font-weight:600;color:var(--ink2);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:7px 14px}
 
-  .final{text-align:center;padding:108px 0;position:relative}
+  /* ---------- FINAL ---------- */
+  .final{text-align:center;padding:106px 0;position:relative}
   .final::before{content:"";display:block;width:76px;height:6px;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--mint),var(--lemon));margin:0 auto 30px}
-  .final h2{font-size:48px;letter-spacing:-1px;font-weight:800;line-height:1.1}
+  .final h2{font-size:48px;letter-spacing:-1px;font-weight:820;line-height:1.1}
   .final p{margin-top:16px;font-size:19px;color:var(--ink2)}
   .final .hero-cta{justify-content:center;margin-top:32px}
+  .final .quote{margin-top:26px;font-size:16px;color:var(--ink3);font-style:italic}
 
   footer{border-top:1px solid var(--line);padding:34px 0;color:var(--ink3);font-size:14px}
   .foot-in{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
   .foot-in a:hover{color:var(--ink)}
   .foot-links{display:flex;gap:22px}
 
+  /* ---------- REVEAL ---------- */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+
   @media (max-width:860px){
-    .hero{grid-template-columns:1fr;gap:40px;text-align:center;padding:52px 0 60px}
+    .hero{grid-template-columns:1fr;gap:38px;text-align:center;padding:48px 0 54px}
     .hero::before{display:none}
     .eyebrow{margin-left:auto;margin-right:auto}
     .hero .sub{margin-left:auto;margin-right:auto}
     .hero-cta,.trust{justify-content:center}
     .stage{margin:0 auto}
-    .hero h1{font-size:44px;letter-spacing:-1px}
-    .hero .sub{font-size:19px}
-    .sec-head h2{font-size:34px}
-    .final h2{font-size:38px}
-    .features{grid-template-columns:1fr}
+    .hero h1{font-size:42px;letter-spacing:-1px}
+    .hero .sub{font-size:18px}
+    .section{padding:64px 0}
+    .sec-head h2{font-size:32px}
+    .sec-head{margin-bottom:40px}
+    .final h2{font-size:36px}
+    .pillars{grid-template-columns:1fr;gap:18px}
+    .band{padding:44px 0}
+    .band-in,.band.rev .band-in{grid-template-columns:1fr;gap:32px}
+    .band-txt,.band .demo,.band.rev .band-txt,.band.rev .demo{order:0}
+    .band-txt h3{font-size:27px}
+    .band-txt{text-align:center}
+    .band-txt .kicker{margin-left:auto;margin-right:auto}
+    .band-txt p{margin-left:auto;margin-right:auto}
+    .band-txt .mini-list li{justify-content:center}
+    .demo{max-width:520px;margin:0 auto}
+    .flow .step{font-size:14px;padding:9px 15px}
     .nav-right .link{display:none}
   }
 </style>
@@ -186,8 +285,7 @@
   <div class="wrap nav-in">
     <div class="brand"><img src="icon.png" alt="SideInk"> SideInk</div>
     <div class="nav-right">
-      <a class="link" href="#features" data-zh="特性" data-en="Features">特性</a>
-      <a class="link" href="#privacy" data-zh="隐私" data-en="Privacy">隐私</a>
+      <a class="link" href="#how" data-zh="功能" data-en="Features">功能</a>
       <button class="lang" id="langBtn" onclick="toggleLang()">EN</button>
       <a class="btn btn-primary" href="#download"><img src="icon.png" alt=""><span data-zh="下载" data-en="Download">下载</span></a>
     </div>
@@ -197,19 +295,18 @@
 <div class="wrap">
   <section class="hero" id="download">
     <div>
-      <div class="eyebrow" data-zh="一划即写的侧边便签" data-en="Edge notes, instantly ready">一划即写的侧边便签</div>
-      <h1 data-zh="屏幕边缘，<br>留给下一步" data-en="Your next step,<br>right at the edge.">屏幕边缘，<br>留给下一步</h1>
-      <p class="sub" data-zh="灵感、杂事、临时待办，先放进侧边的便签里。SideInk 不抢注意力，只在你需要时轻轻滑出来。"
-         data-en="Capture ideas, errands, and passing todos in a note that waits at the side. SideInk stays quiet until you need it.">灵感、杂事、临时待办，先放进侧边的便签里。SideInk 不抢注意力，只在你需要时轻轻滑出来。</p>
+      <div class="eyebrow" data-zh="AI 桌面思维助手" data-en="An AI thinking companion">AI 桌面思维助手</div>
+      <h1 data-zh="让每个想法，<br><span class='g'>都走向行动。</span>" data-en="Turn every thought<br><span class='g'>into action.</span>">让每个想法，<br><span class="g">都走向行动。</span></h1>
+      <p class="sub" data-zh="滑一下，记录灵感；收起来，继续专注。<br>SideInk 帮你把碎片想法整理成行动。"
+         data-en="A swipe to jot the idea, a swipe to tuck it away and stay focused.<br>SideInk turns scattered thoughts into action.">滑一下，记录灵感；收起来，继续专注。<br>SideInk 帮你把碎片想法整理成行动。</p>
       <div class="hero-cta">
         <a class="btn btn-primary" href="https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-arm64.dmg" rel="noopener">
           <img src="icon.png" alt=""><span data-zh="下载 for macOS" data-en="Download for macOS">下载 for macOS</span>
         </a>
       </div>
       <div class="trust">
-        <span><b data-zh="免费" data-en="Free">免费</b></span><span class="dot"></span>
-        <span data-zh="支持 Apple 芯片 Mac" data-en="Apple silicon Macs">支持 Apple 芯片 Mac</span><span class="dot"></span>
-        <span data-zh="数据仅存本地" data-en="Local-only data">数据仅存本地</span>
+        <span><b data-zh="限时免费中" data-en="Free for now">限时免费中</b></span><span class="dot"></span>
+        <span data-zh="支持 Apple 芯片 Mac" data-en="Apple silicon Macs">支持 Apple 芯片 Mac</span>
       </div>
     </div>
 
@@ -219,62 +316,176 @@
         <svg class="cursor" id="cursor" viewBox="0 0 24 24" fill="#fff" stroke="#333" stroke-width="1"><path d="M5 3l14 8-6 1.5L10 20 5 3z"/></svg>
         <div class="panel" id="demoPanel">
           <img class="clip" src="clip.png" alt="">
-          <div id="demoRows"></div>
+          <div class="demoRows" id="demoRows"></div>
         </div>
       </div>
     </div>
   </section>
 </div>
 
-<div class="section soft" id="features">
+<!-- FLOW STRIP -->
+<div class="wrap flow-sec">
+  <div class="flow reveal">
+    <div class="step"><span class="from" data-zh="想到" data-en="Idea">想到</span><span class="arw">→</span><span class="to" data-zh="记录" data-en="Captured">记录</span></div>
+    <div class="step"><span class="from" data-zh="碎片" data-en="Fragments">碎片</span><span class="arw">→</span><span class="to" data-zh="整理" data-en="Organized">整理</span></div>
+    <div class="step"><span class="from" data-zh="复杂" data-en="Complex">复杂</span><span class="arw">→</span><span class="to" data-zh="拆解" data-en="Broken down">拆解</span></div>
+    <div class="step"><span class="from" data-zh="重复" data-en="Repetitive">重复</span><span class="arw">→</span><span class="to" data-zh="AI 完成" data-en="Done by AI">AI 完成</span></div>
+  </div>
+</div>
+
+<!-- PILLARS -->
+<div class="section soft" id="how">
   <div class="wrap">
-    <div class="sec-head">
-      <h2 data-zh="把待办放在思路旁边" data-en="Keep todos beside your flow">把待办放在思路旁边</h2>
-      <p data-zh="少一个窗口，少一次切换，让脑子继续往前走。" data-en="One less window, one less context switch, so your mind can keep moving.">少一个窗口，少一次切换，让脑子继续往前走。</p>
+    <div class="sec-head reveal">
+      <div class="kick" data-zh="捕捉 · 整理 · 行动" data-en="Capture · Organize · Act">捕捉 · 整理 · 行动</div>
+      <h2 data-zh="接住想法，推动行动" data-en="Catch the thought, drive the action">接住想法，推动行动</h2>
+      <p data-zh="从灵感闪现，到事情完成——SideInk 陪你走完这一整段。" data-en="From a passing spark to something finished — SideInk walks the whole way with you.">从灵感闪现，到事情完成——SideInk 陪你走完这一整段。</p>
     </div>
-    <div class="features">
-      <div class="feature">
-        <div class="fi"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><line x1="15" y1="4" x2="15" y2="20"/><polyline points="9 10 11 12 9 14"/></svg></div>
-        <h3 data-zh="贴边唤起" data-en="Edge-first capture">贴边唤起</h3>
-        <p data-zh="指针靠近边缘，便签自然滑出；离开后安静收回。它像桌面上的便签纸，但不会挡住正在做的事。"
-           data-en="Move to the edge and the note glides in; leave and it tucks away. It feels like paper on your desk, without covering your work.">指针靠近边缘，便签自然滑出；离开后安静收回。它像桌面上的便签纸，但不会挡住正在做的事。</p>
+    <div class="pillars">
+      <div class="pillar reveal">
+        <div class="pi"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
+        <div class="step-tag" data-zh="第一步" data-en="Step 1">第一步</div>
+        <h3 data-zh="捕捉" data-en="Capture">捕捉</h3>
+        <p data-zh="想法来了，不必打断当下。<br>鼠标轻滑，随手记录，让灵感先留下。" data-en="An idea shows up — no need to stop.<br>A flick of the mouse and it's saved, so the spark doesn't slip away.">想法来了，不必打断当下。<br>鼠标轻滑，随手记录，让灵感先留下。</p>
       </div>
-      <div class="feature">
-        <div class="fi"><svg viewBox="0 0 24 24"><polyline points="3 6 4.5 7.5 7 5"/><line x1="10" y1="6" x2="21" y2="6"/><polyline points="10 12.5 11.5 14 14 11.5"/><line x1="16" y1="12.5" x2="21" y2="12.5"/><line x1="10" y1="19" x2="21" y2="19"/></svg></div>
-        <h3 data-zh="大纲式整理" data-en="Outline your intent">大纲式整理</h3>
-        <p data-zh="主项、子项顺手拆开，轻重缓急一眼看清。想法从一团线，变成可以推进的下一步。"
-           data-en="Split main tasks into subtasks and see the shape of your work at a glance. A fuzzy thought becomes a next step.">主项、子项顺手拆开，轻重缓急一眼看清。想法从一团线，变成可以推进的下一步。</p>
+      <div class="pillar reveal">
+        <div class="pi"><svg viewBox="0 0 24 24"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="17" x2="17" y2="17"/><circle cx="19" cy="15.5" r="3"/></svg></div>
+        <div class="step-tag" data-zh="第二步" data-en="Step 2">第二步</div>
+        <h3 data-zh="归类整理" data-en="Sort &amp; organize">归类整理</h3>
+        <p data-zh="将碎片想法归类，<br>你会结构清晰。" data-en="Group your scattered thoughts,<br>and the structure becomes clear.">将碎片想法归类，<br>你会结构清晰。</p>
       </div>
-      <div class="feature">
-        <div class="fi"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2 2M16.4 16.4l2 2M18.4 5.6l-2 2M7.6 16.4l-2 2"/><circle cx="12" cy="12" r="3"/></svg></div>
-        <h3 data-zh="完成被看见" data-en="Progress you can feel">完成被看见</h3>
-        <p data-zh="勾掉一条，给自己一个轻快的反馈。那些小小推进不再消失在忙碌里，而是变成可感知的进展。"
-           data-en="Check one off and get a small, bright response. Tiny wins stop vanishing into the day and start feeling real.">勾掉一条，给自己一个轻快的反馈。那些小小推进不再消失在忙碌里，而是变成可感知的进展。</p>
-      </div>
-      <div class="feature">
-        <div class="fi"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="10" height="12" rx="2"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><circle cx="9" cy="14" r="1"/><path d="M17 5l4 2v3.5c0 3.5-2.5 6-4 7"/></svg></div>
-        <h3 data-zh="把收集交给 AI" data-en="Delegate research to AI">把收集交给 AI</h3>
-        <p data-zh="需要整理资料时，把任务交出去：多源信息自动汇总成简报，再沉淀到你的 Obsidian。"
-           data-en="When a task needs research, hand it over: sources become a concise brief, then land in your Obsidian.">需要整理资料时，把任务交出去：多源信息自动汇总成简报，再沉淀到你的 Obsidian。</p>
+      <div class="pillar reveal">
+        <div class="pi"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></div>
+        <div class="step-tag" data-zh="第三步" data-en="Step 3">第三步</div>
+        <h3 data-zh="大事化小" data-en="Big into small">大事化小</h3>
+        <p data-zh="将「大想法」分拆成小步骤，<br>AI 帮你拆解复杂任务，降低开始的阻力。" data-en="Split a big idea into small steps —<br>AI breaks it down and lowers the cost of starting.">将「大想法」分拆成小步骤，<br>AI 帮你拆解复杂任务，降低开始的阻力。</p>
       </div>
     </div>
   </div>
 </div>
 
-<div class="section" id="privacy">
+<!-- BAND 1: CAPTURE -->
+<div class="band" id="capture">
+  <div class="band-in">
+    <div class="band-txt reveal">
+      <div class="kicker" data-zh="捕捉" data-en="Capture">捕捉</div>
+      <h3 data-zh="超方便，随手记录" data-en="Capture in a single swipe">超方便，随手记录</h3>
+      <p data-zh="鼠标贴边，便签就滑出来，直接写；<br>鼠标一离开，便签自动收起。<br>不用切换窗口，不用打开 App——让灵感先落下，你继续专注。"
+         data-en="Nudge the screen edge and a note slides out, ready to type;<br>move away and it tucks itself back.<br>No window to switch, no app to open — let the spark land while you stay in flow.">鼠标贴边，便签就滑出来，直接写；<br>鼠标一离开，便签自动收起。<br>不用切换窗口，不用打开 App——让灵感先落下，你继续专注。</p>
+      <ul class="mini-list">
+        <li><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg><span data-zh="贴边即出，不占屏幕" data-en="Slides in at the edge, off your screen otherwise">贴边即出，不占屏幕</span></li>
+        <li><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg><span data-zh="零切换，不打断当下" data-en="Zero context-switch, no interruption">零切换，不打断当下</span></li>
+      </ul>
+    </div>
+    <div class="demo screendemo" id="capStage">
+      <div class="screen">
+        <div class="menubar"><i></i><i></i><i></i></div>
+        <svg class="cursor" viewBox="0 0 24 24" fill="#fff" stroke="#333" stroke-width="1"><path d="M5 3l14 8-6 1.5L10 20 5 3z"/></svg>
+        <div class="panel"><img class="clip" src="clip.png" alt=""><div class="demoRows"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: FINISH -->
+<div class="section soft" id="finish">
   <div class="wrap">
-    <div class="privacy">
-      <div class="shield"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v5c0 5-3.5 9-8 11-4.5-2-8-6-8-11V6z"/><polyline points="9 12 11 14 15 10"/></svg></div>
-      <div class="ptxt">
-        <h3 data-zh="你的想法，只属于你" data-en="Your thoughts stay yours">你的想法，只属于你</h3>
-        <p data-zh="待办和便签留在你自己的电脑里。无需注册登录，不上传服务器，也不把你的注意力拿去换数据。"
-           data-en="Todos and notes stay on your own computer. No sign-up, no server upload, and no trading your attention for data.">待办和便签留在你自己的电脑里。无需注册登录，不上传服务器，也不把你的注意力拿去换数据。</p>
-        <div class="badges">
-          <span class="badge" data-zh="本地存储" data-en="Local storage">本地存储</span>
-          <span class="badge" data-zh="无需登录" data-en="No login">无需登录</span>
-          <span class="badge" data-zh="不追踪" data-en="No tracking">不追踪</span>
-          <span class="badge" data-zh="AI 用你自己的 Key" data-en="Bring your own AI key">AI 用你自己的 Key</span>
+    <div class="sec-head reveal">
+      <div class="kick" data-zh="更多更好，完成" data-en="And better yet — finish it">更多更好，完成</div>
+      <h2 data-zh="记下来，只是开始" data-en="Getting it down is just the start">记下来，只是开始</h2>
+      <p data-zh="钉住、标记、拆解、交给 AI——SideInk 陪你把想法一路推到完成。" data-en="Pin it, mark it, break it down, hand it to AI — SideInk carries your ideas all the way to done.">钉住、标记、拆解、交给 AI——SideInk 陪你把想法一路推到完成。</p>
+    </div>
+  </div>
+
+  <!-- A: PIN + HIGHLIGHT -->
+  <div class="band">
+    <div class="band-in">
+      <div class="band-txt reveal">
+        <div class="kicker" data-zh="专注" data-en="Focus">专注</div>
+        <h3 data-zh="钉住重点，标记关键" data-en="Pin what matters, mark what counts">钉住重点，标记关键</h3>
+        <p data-zh="需要盯着的事，一键钉住，便签不再自动收起，让你更专注；<br>高亮与格式随手可用，重点一眼看见，还能用 @ 语法标注时间和标签。"
+           data-en="Pin the note you need in sight and it stays put — so you can focus.<br>Highlight and format on the fly, and tag time or context with a simple @ syntax.">需要盯着的事，一键钉住，便签不再自动收起，让你更专注；<br>高亮与格式随手可用，重点一眼看见，还能用 @ 语法标注时间和标签。</p>
+      </div>
+      <div class="demo screendemo">
+        <div class="screen">
+          <div class="menubar"><i></i><i></i><i></i></div>
+          <div class="panel out pin-panel">
+            <img class="clip" src="clip.png" alt="">
+            <div class="pinpush">📌</div>
+            <div class="pinrow"><span class="pincb"></span><span class="pintext" data-zh="出活动设计图 <b class='hl-at'>@小李</b>" data-en="Event design draft <b class='hl-at'>@Alex</b>">出活动设计图 <b class="hl-at">@小李</b></span></div>
+            <div class="pinrow"><span class="pincb"></span><span class="pintext" data-zh="<b class='hl-time'>15:30</b> 项目 kickoff 会" data-en="<b class='hl-time'>15:30</b> project kickoff">​<b class="hl-time">15:30</b> 项目 kickoff 会</span></div>
+            <div class="pinrow"><span class="pincb"></span><span class="pintext" data-zh="做季度汇报 PPT <b class='hl-pct'>20%</b>" data-en="Quarterly report deck <b class='hl-pct'>20%</b>">做季度汇报 PPT <b class="hl-pct">20%</b></span></div>
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: CELEBRATE -->
+  <div class="band rev">
+    <div class="band-in">
+      <div class="band-txt reveal">
+        <div class="kicker" data-zh="反馈" data-en="Reward">反馈</div>
+        <h3 data-zh="让每一次完成，都值得庆祝" data-en="Make every &ldquo;done&rdquo; worth celebrating">让每一次完成，都值得庆祝</h3>
+        <p data-zh="勾掉一条，就放一次小烟花。<br>那些微小的推进不再消失在忙碌里，<br>而是变成看得见、感受得到的进展。"
+           data-en="Check one off and a tiny firework goes up.<br>Small wins stop vanishing into a busy day —<br>they become progress you can see and feel.">勾掉一条，就放一次小烟花。<br>那些微小的推进不再消失在忙碌里，<br>而是变成看得见、感受得到的进展。</p>
+      </div>
+      <div class="demo" data-demo="fire">
+        <div class="win"><div class="win-bar"><i></i><i></i><i></i></div><div class="wl m"></div><div class="wl s"></div></div>
+        <div class="note2 fire-note"><img class="clip2" src="clip.png" alt="">
+          <div class="r"><span class="cb"></span><span class="rt" data-zh="把提案发给团队" data-en="Send the proposal to the team">把提案发给团队</span></div>
+        </div>
+        <svg class="dcursor" viewBox="0 0 24 24" fill="#fff" stroke="#333" stroke-width="1"><path d="M5 3l14 8-6 1.5L10 20 5 3z"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: SPLIT + CLUSTER -->
+  <div class="band">
+    <div class="band-in">
+      <div class="band-txt reveal">
+        <div class="kicker" data-zh="结构" data-en="Structure">结构</div>
+        <h3 data-zh="拆解让行动清晰，聚类让混乱变有序" data-en="Break it down, then bring it to order">拆解让行动清晰，聚类让混乱变有序</h3>
+        <p data-zh="一个「大想法」点一下就拆成清晰可行的下一步，降低开始的阻力；<br>散落的记录自动聚成主题，让一切井然有序、推进更安心。"
+           data-en="One tap turns a big, daunting idea into clear next steps;<br>scattered notes cluster into themes on their own, so everything stays in order.">一个「大想法」点一下就拆成清晰可行的下一步，降低开始的阻力；<br>散落的记录自动聚成主题，让一切井然有序、推进更安心。</p>
+        <ul class="mini-list">
+          <li><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg><span data-zh="拆解：让每一步清晰可行" data-en="Break down: every step clear and doable">拆解：让每一步清晰可行</span></li>
+          <li><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg><span data-zh="聚类：让一切井然有序" data-en="Cluster: everything falls into place">聚类：让一切井然有序</span></li>
+        </ul>
+      </div>
+      <div class="demo" data-demo="split">
+        <div class="win"><div class="win-bar"><i></i><i></i><i></i></div><div class="wl m"></div><div class="wl s"></div></div>
+        <div class="note2 split-note"><img class="clip2" src="clip.png" alt="">
+          <div class="split-head"><span class="cb"></span><span class="rt" data-zh="筹备产品发布会" data-en="Plan the launch event">筹备产品发布会</span><span class="splitbtn" data-zh="✦ 拆解" data-en="✦ Break down">✦ 拆解</span></div>
+          <div class="subs"></div>
+        </div>
+        <svg class="dcursor" viewBox="0 0 24 24" fill="#fff" stroke="#333" stroke-width="1"><path d="M5 3l14 8-6 1.5L10 20 5 3z"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- D: AI DELEGATE -->
+  <div class="band rev">
+    <div class="band-in">
+      <div class="band-txt reveal">
+        <div class="kicker" data-zh="代劳" data-en="Delegate">代劳</div>
+        <h3 data-zh="重复的活，交给 AI 完成" data-en="Hand the busywork to AI">重复的活，交给 AI 完成</h3>
+        <p data-zh="每天重复的信息收集，让 AI 自动完成：<br>收集资料、整理信息、生成文档、输出初稿，再沉淀到你的 Obsidian。<br>把时间留给真正需要你的部分。"
+           data-en="Let AI handle the daily research:<br>gather sources, organize, draft the doc — then drop it into your Obsidian.<br>Keep your time for the parts that need you.">每天重复的信息收集，让 AI 自动完成：<br>收集资料、整理信息、生成文档、输出初稿，再沉淀到你的 Obsidian。<br>把时间留给真正需要你的部分。</p>
+      </div>
+      <div class="demo" data-demo="ai">
+        <div class="obs">
+          <div class="fname" data-zh="AI 日报.md" data-en="AI-Daily.md">AI 日报.md</div>
+          <div class="oline oh" data-zh="# 今日 AI 要闻" data-en="# Today in AI">＃ 今日 AI 要闻</div>
+          <div class="oline" data-zh="- 模型发布：3 条" data-en="- New model releases: 3">- 模型发布：3 条</div>
+          <div class="oline" data-zh="- 行业动态：5 条" data-en="- Industry moves: 5">- 行业动态：5 条</div>
+          <div class="oline ob" data-zh="> 已整理成初稿 ✓" data-en="> Draft ready ✓">&gt; 已整理成初稿 ✓</div>
+        </div>
+        <div class="note2 ai-note"><img class="clip2" src="clip.png" alt="">
+          <div class="r"><span class="cb"></span><span class="rt" data-zh="收集今天的 AI 行业资讯" data-en="Collect today's AI news">收集今天的 AI 行业资讯</span></div>
+          <div class="ai-status"><span class="ai-label" data-zh="AI 收集中" data-en="AI collecting">AI 收集中</span><span class="dots"><i></i><i></i><i></i></span></div>
+        </div>
+        <div class="toast" data-zh="✓ 收集完成" data-en="✓ Done">✓ 收集完成</div>
       </div>
     </div>
   </div>
@@ -282,8 +493,8 @@
 
 <div class="wrap">
   <section class="final">
-    <h2 data-zh="让下一步，轻轻浮出来。" data-en="Let the next step surface.">让下一步，轻轻浮出来。</h2>
-    <p data-zh="免费下载，支持 Apple 芯片 Mac，即装即用。" data-en="Free download. Apple silicon Macs. Ready in one click.">免费下载，支持 Apple 芯片 Mac，即装即用。</p>
+    <h2 data-zh="让每个想法，都走向行动。" data-en="Turn every thought into action.">让每个想法，都走向行动。</h2>
+    <p data-zh="限时免费下载，支持 Apple 芯片 Mac，即装即用。" data-en="Free for a limited time. Apple silicon Macs. Ready in one click.">限时免费下载，支持 Apple 芯片 Mac，即装即用。</p>
     <div class="hero-cta">
       <a class="btn btn-primary" href="https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-arm64.dmg" rel="noopener">
         <img src="icon.png" alt=""><span data-zh="下载 for macOS" data-en="Download for macOS">下载 for macOS</span>
@@ -296,8 +507,7 @@
   <div class="wrap foot-in">
     <div>© 2026 SideInk</div>
     <div class="foot-links">
-      <a href="#features" data-zh="特性" data-en="Features">特性</a>
-      <a href="#privacy" data-zh="隐私" data-en="Privacy">隐私</a>
+      <a href="#how" data-zh="功能" data-en="Features">功能</a>
       <a href="#download" data-zh="下载" data-en="Download">下载</a>
     </div>
   </div>
@@ -311,7 +521,7 @@ function applyLang(lang){
   document.querySelectorAll('[data-zh]').forEach(el=>{
     el.innerHTML = en ? el.getAttribute('data-en') : el.getAttribute('data-zh');
   });
-  document.title = en ? 'SideInk — floating sticky-note to-do for macOS' : 'SideInk — 常驻屏幕边缘的悬浮便签待办';
+  document.title = en ? 'SideInk — turn every thought into action' : 'SideInk — 让每个想法，都走向行动';
   const btn = document.getElementById('langBtn');
   if(btn) btn.textContent = en ? '中' : 'EN';
   try{ localStorage.setItem('lang', lang); }catch(e){}
@@ -327,56 +537,46 @@ function toggleLang(){
   applyLang(lang);
 })();
 
-/* 演示动画 */
-(function(){
-  const rows = document.getElementById('demoRows');
-  const panel = document.getElementById('demoPanel');
-  const cursor = document.getElementById('cursor');
-  if(!rows) return;
-  const COLORS = ['#009BFF','#7c3aed','#16a34a','#eab308','#f97316','#ef4444','#ec4899','#06b6d4','#00c2a8','#ff5da2'];
-  const sleep = ms => new Promise(r=>setTimeout(r,ms));
-  const enMode = () => document.documentElement.lang === 'en';
-  const T = {
-    a:['整理今天的三个重点','Choose today’s top three'],
-    b:['把灵感写成提纲','Turn idea into outline'],
-    c:['补一条参考链接','Add one reference link'],
-    d:['拆出下一步动作','Break out next action'],
-    e:['收集 AI 行业资讯','Collect AI news'],
-    f:['整理周末行李清单','Pack weekend list'],
-    g:['预约家里清洁','Book home cleaning']
-  };
-  const tx = k => enMode() ? T[k][1] : T[k][0];
-  function makeRow(level){
-    const row = document.createElement('div');
-    row.className = 'demo-row' + (level ? ' demo-sub' : '');
-    const cb = document.createElement('span'); cb.className = 'demo-cb';
-    const t = document.createElement('span'); t.className = 'demo-t';
-    row.appendChild(cb); row.appendChild(t); rows.appendChild(row);
-    requestAnimationFrame(()=>row.classList.add('show'));
-    return { cb, t };
+/* ===== 共享工具 ===== */
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const EN = () => document.documentElement.lang === 'en';
+const L = (zh,en) => EN() ? en : zh;
+const CONFETTI = ['#009BFF','#7c3aed','#16a34a','#eab308','#f97316','#ef4444','#ec4899','#06b6d4','#00c2a8','#ff5da2'];
+async function typeInto(el, text, cps=30){ el.textContent=''; for(const ch of text){ el.textContent += ch; await sleep(1000/cps + Math.random()*22); } }
+function burst(container, x, y, n=26){
+  for(let i=0;i<n;i++){
+    const s=document.createElement('span'); s.className='spark';
+    const sz=3+Math.random()*3; s.style.width=s.style.height=sz+'px';
+    s.style.background=CONFETTI[i%CONFETTI.length];
+    s.style.left=x+'px'; s.style.top=y+'px'; s.style.zIndex=40;
+    container.appendChild(s);
+    const ang=(i/n)*Math.PI*2+Math.random()*0.3, dist=34+Math.random()*66;
+    requestAnimationFrame(()=>{ s.style.transition='transform .82s cubic-bezier(.15,.6,.3,1),opacity .82s ease-out'; s.style.transform=`translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist+16}px)`; s.style.opacity='0'; });
+    setTimeout(()=>s.remove(), 880);
   }
-  async function type(t, text){
-    const caret = document.createElement('span'); caret.className = 'caret';
-    t.appendChild(caret);
-    for(const ch of text){ caret.insertAdjacentText('beforebegin', ch); await sleep(48 + Math.random()*42); }
-    caret.remove();
-  }
-  function localPos(el){ let x=0,y=0,n=el; while(n&&n!==panel){x+=n.offsetLeft;y+=n.offsetTop;n=n.offsetParent;} return {x:x+el.offsetWidth/2,y:y+el.offsetHeight/2}; }
-  function burst(cb){
-    const c = localPos(cb), N = 30;
-    for(let i=0;i<N;i++){
-      const s = document.createElement('span'); s.className = 'spark';
-      const sz = 3 + Math.random()*3; s.style.width = s.style.height = sz + 'px';
-      s.style.background = COLORS[i % COLORS.length];
-      s.style.left = c.x + 'px'; s.style.top = c.y + 'px';
-      panel.appendChild(s);
-      const ang = (i/N)*Math.PI*2 + Math.random()*0.3, dist = 40 + Math.random()*70;
-      requestAnimationFrame(()=>{ s.style.transition='transform .85s cubic-bezier(.15,.6,.3,1), opacity .85s ease-out'; s.style.transform=`translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist+18}px)`; s.style.opacity='0'; });
-      setTimeout(()=>s.remove(), 900);
-    }
-  }
-  function check(cell){ cell.cb.classList.add('done'); cell.cb.textContent='✓'; cell.t.classList.add('done'); burst(cell.cb); }
-  function reset(){ panel.classList.remove('out'); cursor.style.opacity='1'; cursor.style.left='40%'; cursor.style.top='54%'; rows.innerHTML=''; }
+}
+async function idle(state){ while(!state.active){ await sleep(220); } }
+function mkRow(text, {sub=false}={}){
+  const r=document.createElement('div'); r.className='r'+(sub?' subitem':'');
+  r.innerHTML='<span class="cb"></span><span class="rt"></span>';
+  return r;
+}
+function centerIn(stage, el){
+  const sr=stage.getBoundingClientRect(), er=el.getBoundingClientRect();
+  return { x: er.left-sr.left+er.width/2, y: er.top-sr.top+er.height/2 };
+}
+
+/* ===== 便签滑入/记录/滑出 演示（Hero + 捕捉 复用同一套）===== */
+function noteDemo(rows, panel, cursor){
+  if(!rows || !panel || !cursor) return;
+  const enMode=()=>document.documentElement.lang==='en';
+  const T={a:['整理今天的三个重点','Choose today’s top three'],b:['把灵感写成提纲','Turn idea into outline'],c:['补一条参考链接','Add one reference link'],d:['拆出下一步动作','Break out next action'],e:['收集 AI 行业资讯','Collect AI news'],f:['整理周末行李清单','Pack weekend list'],g:['预约家里清洁','Book home cleaning']};
+  const tx=k=>enMode()?T[k][1]:T[k][0];
+  function makeRow(level){const row=document.createElement('div');row.className='demo-row'+(level?' demo-sub':'');const cb=document.createElement('span');cb.className='demo-cb';const t=document.createElement('span');t.className='demo-t';row.appendChild(cb);row.appendChild(t);rows.appendChild(row);requestAnimationFrame(()=>row.classList.add('show'));return{cb,t};}
+  async function type(t,text){const caret=document.createElement('span');caret.className='caret';t.appendChild(caret);for(const ch of text){caret.insertAdjacentText('beforebegin',ch);await sleep(48+Math.random()*42);}caret.remove();}
+  function localPos(el){let x=0,y=0,n=el;while(n&&n!==panel){x+=n.offsetLeft;y+=n.offsetTop;n=n.offsetParent;}return{x:x+el.offsetWidth/2,y:y+el.offsetHeight/2};}
+  function check(cell){cell.cb.classList.add('done');cell.cb.textContent='✓';cell.t.classList.add('done');const c=localPos(cell.cb);burst(panel,c.x,c.y,30);}
+  function reset(){panel.classList.remove('out');cursor.style.opacity='1';cursor.style.left='40%';cursor.style.top='54%';rows.innerHTML='';}
   async function run(){
     while(true){
       reset(); await sleep(1000);
@@ -396,14 +596,91 @@ function toggleLang(){
     }
   }
   run();
+}
+// Hero
+noteDemo(document.getElementById('demoRows'), document.getElementById('demoPanel'), document.querySelector('.hero .cursor'));
+// 捕捉 band（复用同一套）
+(function(){ const s=document.getElementById('capStage'); if(s) noteDemo(s.querySelector('.demoRows'), s.querySelector('.panel'), s.querySelector('.cursor')); })();
+
+/* ===== 特性演示（懒启动，进视口才跑）===== */
+function mountDemo(stage, fn){
+  const state={active:false, started:false};
+  const io=new IntersectionObserver(es=>{ es.forEach(e=>{ state.active=e.isIntersecting; if(e.isIntersecting && !state.started){ state.started=true; fn(state); } }); }, {threshold:.25});
+  io.observe(stage);
+}
+
+/* 3) 完成庆祝：勾选放烟花 */
+function demoFire(stage, state){
+  const cur=stage.querySelector('.dcursor'), row=stage.querySelector('.r'), cb=stage.querySelector('.cb');
+  (async()=>{ while(true){
+    await idle(state);
+    cb.classList.remove('on'); cb.textContent=''; row.classList.remove('done'); cur.style.opacity='1'; cur.style.left='38%'; cur.style.top='58%'; await sleep(950);
+    cur.style.left='30%'; cur.style.top='50%'; await sleep(880);
+    cb.classList.add('on'); cb.textContent='✓'; row.classList.add('done');
+    const c=centerIn(stage, cb); burst(stage, c.x, c.y, 30);
+    await sleep(1900);
+  }})();
+}
+
+/* 4) 拆解：主待办 → 4 子待办 */
+function demoSplit(stage, state){
+  const cur=stage.querySelector('.dcursor'), btn=stage.querySelector('.splitbtn'), subs=stage.querySelector('.subs');
+  const items=[['写邀请文案','Draft the invite'],['敲定场地','Lock the venue'],['准备演示 Demo','Prep the demo'],['邀请媒体到场','Invite the press']];
+  (async()=>{ while(true){
+    await idle(state);
+    subs.innerHTML=''; btn.classList.remove('busy'); btn.textContent=L('✦ 拆解','✦ Break down'); cur.style.opacity='1'; cur.style.left='38%'; cur.style.top='62%'; await sleep(950);
+    cur.style.left='78%'; cur.style.top='30%'; await sleep(880);
+    btn.classList.add('busy'); btn.textContent=L('拆解中…','Breaking…'); cur.style.opacity='0'; await sleep(950);
+    btn.classList.remove('busy'); btn.textContent=L('✦ 拆解','✦ Break down');
+    for(const it of items){
+      const s=document.createElement('div'); s.className='subitem';
+      s.innerHTML='<span class="cb"></span><span class="rt">'+L(it[0],it[1])+'</span>';
+      subs.appendChild(s); requestAnimationFrame(()=>s.classList.add('in')); await sleep(300);
+    }
+    await sleep(2100);
+  }})();
+}
+
+/* 5) AI 代劳：收集中 → toast 完成 → 打钩烟花 → 文档缓缓浮现 */
+function demoAI(stage, state){
+  const status=stage.querySelector('.ai-status'), obs=stage.querySelector('.obs'), lines=obs.querySelectorAll('.oline'),
+        toast=stage.querySelector('.toast'), row=stage.querySelector('.ai-note .r'), cb=stage.querySelector('.ai-note .cb');
+  (async()=>{ while(true){
+    await idle(state);
+    obs.classList.remove('show'); lines.forEach(l=>l.classList.remove('vis'));
+    toast.classList.remove('show'); status.style.opacity='1'; cb.classList.remove('on'); cb.textContent=''; row.classList.remove('done');
+    status.innerHTML='<span class="ai-label">'+L('AI 收集中','AI collecting')+'</span><span class="dots"><i></i><i></i><i></i></span>';
+    await sleep(2200);
+    // 完成 toast
+    toast.textContent=L('✓ 收集完成','✓ Done'); toast.classList.add('show');
+    // 打钩 + 烟花
+    status.style.opacity='0';
+    cb.classList.add('on'); cb.textContent='✓'; row.classList.add('done');
+    const c=centerIn(stage, cb); burst(stage, c.x, c.y, 26);
+    await sleep(650);
+    // 背后缓缓显示文档
+    obs.classList.add('show'); await sleep(520);
+    for(const ln of lines){ ln.classList.add('vis'); await sleep(240); }
+    await sleep(2200);
+    toast.classList.remove('show'); await sleep(700);
+  }})();
+}
+
+/* 挂载所有特性演示（直接启动，和 Hero 一样立即循环播放）*/
+(function(){
+  const map={fire:demoFire, split:demoSplit, ai:demoAI};
+  document.querySelectorAll('.demo[data-demo]').forEach(stage=>{
+    const fn=map[stage.getAttribute('data-demo')];
+    if(fn) fn(stage, {active:true});
+  });
 })();
 
-/* 特性卡淡入 */
+/* ===== 滚动淡入 ===== */
 (function(){
-  const cards = document.querySelectorAll('.feature');
-  if(!('IntersectionObserver' in window)){ cards.forEach(c=>c.classList.add('in')); return; }
-  const io = new IntersectionObserver((es)=>{ es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold:.15, rootMargin:'0px 0px -8% 0px' });
-  cards.forEach((c,i)=>{ c.style.transitionDelay = (i%2)*90 + 'ms'; io.observe(c); });
+  const els=document.querySelectorAll('.reveal');
+  if(!('IntersectionObserver' in window)){ els.forEach(c=>c.classList.add('in')); return; }
+  const io=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); }, {threshold:.12, rootMargin:'0px 0px -6% 0px'});
+  els.forEach(c=>io.observe(c));
 })();
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
