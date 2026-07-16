@@ -322,11 +322,11 @@
         <a class="btn btn-primary" href="https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-arm64.dmg" rel="noopener">
           <img src="icon.png" alt=""><span data-zh="下载 for macOS" data-en="Download for macOS">下载 for macOS</span>
         </a>
-        <a class="alt-dl" href="https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-x64.dmg" rel="noopener" data-zh="Intel 芯片 Mac 版" data-en="For Intel Macs">Intel 芯片 Mac 版</a>
+        <a class="alt-dl" href="https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-x64.dmg" rel="noopener" data-zh="Intel Mac 版" data-en="For Intel Macs">Intel Mac 版</a>
       </div>
       <div class="trust">
         <span><b data-zh="限时免费中" data-en="Free for now">限时免费中</b></span><span class="dot"></span>
-        <span data-zh="支持 Apple 芯片 / Intel Mac" data-en="Apple silicon &amp; Intel Macs">支持 Apple 芯片 / Intel Mac</span>
+        <span data-zh="支持所有 Mac 机型" data-en="Works on every Mac">支持所有 Mac 机型</span>
       </div>
     </div>
 
@@ -514,12 +514,12 @@
 <div class="wrap">
   <section class="final">
     <h2 data-zh="让每个想法，都走向行动。" data-en="Turn every thought into action.">让每个想法，都走向行动。</h2>
-    <p data-zh="限时免费下载，支持 Apple 芯片 / Intel Mac，即装即用。" data-en="Free for a limited time. Apple silicon &amp; Intel Macs. Ready in one click.">限时免费下载，支持 Apple 芯片 / Intel Mac，即装即用。</p>
+    <p data-zh="限时免费下载，即装即用。" data-en="Free for a limited time. Ready in one click.">限时免费下载，即装即用。</p>
     <div class="hero-cta">
       <a class="btn btn-primary" href="https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-arm64.dmg" rel="noopener">
         <img src="icon.png" alt=""><span data-zh="下载 for macOS" data-en="Download for macOS">下载 for macOS</span>
       </a>
-      <a class="alt-dl" href="https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-x64.dmg" rel="noopener" data-zh="Intel 芯片 Mac 版" data-en="For Intel Macs">Intel 芯片 Mac 版</a>
+      <a class="alt-dl" href="https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-x64.dmg" rel="noopener" data-zh="Intel Mac 版" data-en="For Intel Macs">Intel Mac 版</a>
     </div>
   </section>
 </div>
@@ -577,25 +577,19 @@ function toggleLang(){
     } catch (e2) {}
   }
   const other = arch === 'arm64' ? 'x64' : 'arm64';
-  const primaryLabel = {
-    arm64: { zh:'下载 for macOS（Apple 芯片）', en:'Download for macOS (Apple silicon)' },
-    x64:   { zh:'下载 for macOS（Intel 芯片）', en:'Download for macOS (Intel)' },
-  };
   const altLabel = {
-    arm64: { zh:'Apple 芯片 Mac 版', en:'For Apple silicon' },
-    x64:   { zh:'Intel 芯片 Mac 版', en:'For Intel Macs' },
+    arm64: { zh:'Apple silicon 版', en:'For Apple silicon' },
+    x64:   { zh:'Intel Mac 版', en:'For Intel Macs' },
   };
-  document.querySelectorAll('a.btn-primary[href*="SideInk-"]').forEach(a => {   // 主按钮 → 匹配芯片
-    a.href = DMG(arch);
-    const span = a.querySelector('[data-zh]');
-    if (span) { span.setAttribute('data-zh', primaryLabel[arch].zh); span.setAttribute('data-en', primaryLabel[arch].en); }
-  });
-  document.querySelectorAll('a.alt-dl[href*="SideInk-"]').forEach(a => {         // 备选链接 → 另一颗芯片
+  // 主按钮：只把下载指向匹配的机型，文案保持简洁的「下载 for macOS」不动
+  document.querySelectorAll('a.btn-primary[href*="SideInk-"]').forEach(a => { a.href = DMG(arch); });
+  // 备选链接：指向另一种 Mac
+  document.querySelectorAll('a.alt-dl[href*="SideInk-"]').forEach(a => {
     a.href = DMG(other);
     a.setAttribute('data-zh', altLabel[other].zh);
     a.setAttribute('data-en', altLabel[other].en);
   });
-  applyLang(document.documentElement.lang === 'en' ? 'en' : 'zh');              // 用当前语言重渲染这些文案
+  applyLang(document.documentElement.lang === 'en' ? 'en' : 'zh');              // 用当前语言重渲染备选文案
 })();
 
 /* ===== 共享工具 ===== */
