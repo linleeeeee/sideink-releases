@@ -558,6 +558,46 @@ function toggleLang(){
   applyLang(lang);
 })();
 
+/* ===== 芯片识别：把匹配当前 Mac 芯片的下载设为主按钮（默认 Apple 芯片；测出 Intel 则换 x64）===== */
+(async function detectMacArch(){
+  const DMG = a => 'https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-'+a+'.dmg';
+  let arch = 'arm64';                       // 默认 Apple 芯片（新 Mac 绝大多数是 M 系列）
+  try {
+    const hv = await navigator.userAgentData?.getHighEntropyValues?.(['architecture']); // Chromium 系最准
+    if (hv && hv.architecture === 'x86') arch = 'x64';
+    else if (hv && hv.architecture === 'arm') arch = 'arm64';
+    else throw 0;
+  } catch (e) {
+    try {                                   // Safari 回退：WebGL 渲染器名（Apple GPU vs Intel/AMD）
+      const gl = document.createElement('canvas').getContext('webgl');
+      const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+      const r = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) || '') : '';
+      if (/intel|amd|radeon/i.test(r)) arch = 'x64';
+      else if (/apple/i.test(r)) arch = 'arm64';
+    } catch (e2) {}
+  }
+  const other = arch === 'arm64' ? 'x64' : 'arm64';
+  const primaryLabel = {
+    arm64: { zh:'下载 for macOS（Apple 芯片）', en:'Download for macOS (Apple silicon)' },
+    x64:   { zh:'下载 for macOS（Intel 芯片）', en:'Download for macOS (Intel)' },
+  };
+  const altLabel = {
+    arm64: { zh:'Apple 芯片 Mac 版', en:'For Apple silicon' },
+    x64:   { zh:'Intel 芯片 Mac 版', en:'For Intel Macs' },
+  };
+  document.querySelectorAll('a.btn-primary[href*="SideInk-"]').forEach(a => {   // 主按钮 → 匹配芯片
+    a.href = DMG(arch);
+    const span = a.querySelector('[data-zh]');
+    if (span) { span.setAttribute('data-zh', primaryLabel[arch].zh); span.setAttribute('data-en', primaryLabel[arch].en); }
+  });
+  document.querySelectorAll('a.alt-dl[href*="SideInk-"]').forEach(a => {         // 备选链接 → 另一颗芯片
+    a.href = DMG(other);
+    a.setAttribute('data-zh', altLabel[other].zh);
+    a.setAttribute('data-en', altLabel[other].en);
+  });
+  applyLang(document.documentElement.lang === 'en' ? 'en' : 'zh');              // 用当前语言重渲染这些文案
+})();
+
 /* ===== 共享工具 ===== */
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
 const EN = () => document.documentElement.lang === 'en';
