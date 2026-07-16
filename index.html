@@ -560,7 +560,14 @@ function toggleLang(){
 
 /* ===== 芯片识别：把匹配当前 Mac 芯片的下载设为主按钮（默认 Apple 芯片；测出 Intel 则换 x64）===== */
 (async function detectMacArch(){
-  const DMG = a => 'https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-'+a+'.dmg';
+  // 双通道分流：大陆用户走阿里云 OSS 直链（GitHub Release 在大陆被限速/阻断），其他用户走 GitHub。
+  // 用时区判断而非语言——海外华人用中文系统但网络通 GitHub，不该被切到国内源。
+  const CN_TZ = ['Asia/Shanghai', 'Asia/Chongqing', 'Asia/Harbin', 'Asia/Urumqi'];
+  let isCN = false;
+  try { isCN = CN_TZ.includes(Intl.DateTimeFormat().resolvedOptions().timeZone || ''); } catch (e) {}
+  const DMG = a => isCN
+    ? 'https://sideink-releases.oss-cn-shanghai.aliyuncs.com/mac/SideInk-'+a+'.dmg'
+    : 'https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-'+a+'.dmg';
   let arch = 'arm64';                       // 默认 Apple 芯片（新 Mac 绝大多数是 M 系列）
   try {
     const hv = await navigator.userAgentData?.getHighEntropyValues?.(['architecture']); // Chromium 系最准
