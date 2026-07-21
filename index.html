@@ -323,6 +323,7 @@
           <img src="icon.png" alt=""><span data-zh="下载 for macOS" data-en="Download for macOS">下载 for macOS</span>
         </a>
         <a class="alt-dl" href="https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-x64.dmg" rel="noopener" data-zh="Intel Mac 版" data-en="For Intel Macs">Intel Mac 版</a>
+        <a class="alt-dl dl-switch" href="#" data-zh="下载不动？换国际线路" data-en="Slow? Use the global mirror">下载不动？换国际线路</a>
       </div>
       <div class="trust">
         <span><b data-zh="限时免费中" data-en="Free for now">限时免费中</b></span><span class="dot"></span>
@@ -520,6 +521,7 @@
         <img src="icon.png" alt=""><span data-zh="下载 for macOS" data-en="Download for macOS">下载 for macOS</span>
       </a>
       <a class="alt-dl" href="https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-x64.dmg" rel="noopener" data-zh="Intel Mac 版" data-en="For Intel Macs">Intel Mac 版</a>
+      <a class="alt-dl dl-switch" href="#" data-zh="下载不动？换国际线路" data-en="Slow? Use the global mirror">下载不动？换国际线路</a>
     </div>
   </section>
 </div>
@@ -565,9 +567,22 @@ function toggleLang(){
   const CN_TZ = ['Asia/Shanghai', 'Asia/Chongqing', 'Asia/Harbin', 'Asia/Urumqi'];
   let isCN = false;
   try { isCN = CN_TZ.includes(Intl.DateTimeFormat().resolvedOptions().timeZone || ''); } catch (e) {}
-  const DMG = a => isCN
-    ? 'https://sideink-releases.oss-cn-shanghai.aliyuncs.com/mac/SideInk-'+a+'.dmg'
-    : 'https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-'+a+'.dmg';
+  const OSS = a => 'https://sideink-releases.oss-cn-shanghai.aliyuncs.com/mac/SideInk-'+a+'.dmg';
+  const GH  = a => 'https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-'+a+'.dmg';
+  const DMG = a => isCN ? OSS(a) : GH(a);
+  // 探活小文件：时区只能猜「人在哪」，猜不出「这条网络到底通不通」。
+  // 典型受害者＝身在国内但开着代理的用户：浏览器把 aliyuncs.com 也送进代理 → 点下载直接 ERR_TIMED_OUT。
+  // 反向同理（海外线路差时 GitHub 可能拉不动）。所以先探一下主源，不通就自动倒向另一条。
+  const PROBE = { oss: 'https://sideink-releases.oss-cn-shanghai.aliyuncs.com/mac/latest-mac.yml',
+                  gh:  'https://github.com/linleeeeee/sideink-releases/releases/latest/download/latest-mac.yml' };
+  async function reachable(url, ms) {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), ms);
+    // no-cors：OSS 没有 CORS 头，读不到状态码，但「连得通 vs 超时」足以区分，这正是我们要的
+    try { await fetch(url, { mode: 'no-cors', cache: 'no-store', signal: ac.signal }); return true; }
+    catch (e) { return false; }
+    finally { clearTimeout(timer); }
+  }
   let arch = 'arm64';                       // 默认 Apple 芯片（新 Mac 绝大多数是 M 系列）
   try {
     const hv = await navigator.userAgentData?.getHighEntropyValues?.(['architecture']); // Chromium 系最准
@@ -588,15 +603,41 @@ function toggleLang(){
     arm64: { zh:'Apple silicon 版', en:'For Apple silicon' },
     x64:   { zh:'Intel Mac 版', en:'For Intel Macs' },
   };
-  // 主按钮：只把下载指向匹配的机型，文案保持简洁的「下载 for macOS」不动
-  document.querySelectorAll('a.btn-primary[href*="SideInk-"]').forEach(a => { a.href = DMG(arch); });
-  // 备选链接：指向另一种 Mac
-  document.querySelectorAll('a.alt-dl[href*="SideInk-"]').forEach(a => {
-    a.href = DMG(other);
-    a.setAttribute('data-zh', altLabel[other].zh);
-    a.setAttribute('data-en', altLabel[other].en);
-  });
+  // 按当前选定的源写入所有下载链接（探活后可能换源，故抽成函数复用）
+  function applyLinks() {
+    // 主按钮：只把下载指向匹配的机型，文案保持简洁的「下载 for macOS」不动
+    document.querySelectorAll('a.btn-primary[href*="SideInk-"]').forEach(a => { a.href = DMG(arch); });
+    // 备选链接：指向另一种 Mac
+    document.querySelectorAll('a.alt-dl[href*="SideInk-"]').forEach(a => {
+      a.href = DMG(other);
+      a.setAttribute('data-zh', altLabel[other].zh);
+      a.setAttribute('data-en', altLabel[other].en);
+    });
+    // 手动换线路：探活万一误判（比如代理直接返回错误页，fetch 立刻 resolve），用户点一下就能自救
+    document.querySelectorAll('a.dl-switch').forEach(a => {
+      a.setAttribute('data-zh', isCN ? '下载不动？换国际线路' : '下载不动？换国内线路');
+      a.setAttribute('data-en', isCN ? 'Slow? Use the global mirror' : 'Slow in China? Use the CN mirror');
+    });
+  }
+  applyLinks();
   applyLang(document.documentElement.lang === 'en' ? 'en' : 'zh');              // 用当前语言重渲染备选文案
+
+  // 探活主源；不通就倒向另一条并重写链接（3s 足够区分「通」与「被代理吞掉」）
+  if (!(await reachable(isCN ? PROBE.oss : PROBE.gh, 3000))) {
+    isCN = !isCN;
+    applyLinks();
+    applyLang(document.documentElement.lang === 'en' ? 'en' : 'zh');
+  }
+
+  // 手动换线路按钮
+  document.querySelectorAll('a.dl-switch').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      isCN = !isCN;
+      applyLinks();
+      applyLang(document.documentElement.lang === 'en' ? 'en' : 'zh');
+    });
+  });
 })();
 
 /* ===== 共享工具 ===== */
