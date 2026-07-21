@@ -323,7 +323,6 @@
           <img src="icon.png" alt=""><span data-zh="下载 for macOS" data-en="Download for macOS">下载 for macOS</span>
         </a>
         <a class="alt-dl" href="https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-x64.dmg" rel="noopener" data-zh="Intel Mac 版" data-en="For Intel Macs">Intel Mac 版</a>
-        <a class="alt-dl dl-switch" href="#" data-zh="下载不动？换国际线路" data-en="Slow? Use the global mirror">下载不动？换国际线路</a>
       </div>
       <div class="trust">
         <span><b data-zh="限时免费中" data-en="Free for now">限时免费中</b></span><span class="dot"></span>
@@ -521,7 +520,6 @@
         <img src="icon.png" alt=""><span data-zh="下载 for macOS" data-en="Download for macOS">下载 for macOS</span>
       </a>
       <a class="alt-dl" href="https://github.com/linleeeeee/sideink-releases/releases/latest/download/SideInk-x64.dmg" rel="noopener" data-zh="Intel Mac 版" data-en="For Intel Macs">Intel Mac 版</a>
-      <a class="alt-dl dl-switch" href="#" data-zh="下载不动？换国际线路" data-en="Slow? Use the global mirror">下载不动？换国际线路</a>
     </div>
   </section>
 </div>
@@ -613,11 +611,6 @@ function toggleLang(){
       a.setAttribute('data-zh', altLabel[other].zh);
       a.setAttribute('data-en', altLabel[other].en);
     });
-    // 手动换线路：探活万一误判（比如代理直接返回错误页，fetch 立刻 resolve），用户点一下就能自救
-    document.querySelectorAll('a.dl-switch').forEach(a => {
-      a.setAttribute('data-zh', isCN ? '下载不动？换国际线路' : '下载不动？换国内线路');
-      a.setAttribute('data-en', isCN ? 'Slow? Use the global mirror' : 'Slow in China? Use the CN mirror');
-    });
   }
   applyLinks();
   applyLang(document.documentElement.lang === 'en' ? 'en' : 'zh');              // 用当前语言重渲染备选文案
@@ -628,16 +621,6 @@ function toggleLang(){
     applyLinks();
     applyLang(document.documentElement.lang === 'en' ? 'en' : 'zh');
   }
-
-  // 手动换线路按钮
-  document.querySelectorAll('a.dl-switch').forEach(a => {
-    a.addEventListener('click', e => {
-      e.preventDefault();
-      isCN = !isCN;
-      applyLinks();
-      applyLang(document.documentElement.lang === 'en' ? 'en' : 'zh');
-    });
-  });
 })();
 
 /* ===== 共享工具 ===== */
